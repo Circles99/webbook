@@ -3,11 +3,17 @@ package respository
 import (
 	"context"
 	"webbook/internal/domain"
+	"webbook/internal/respository/dao"
 )
 
 type UserRepository struct {
+	dao *dao.UserDao
 }
 
 func (r *UserRepository) Create(ctx context.Context, u domain.User) error {
-	return nil
+	return r.dao.Insert(ctx, dao.User{
+		Email:    u.Email,
+		Password: u.Password,
+	})
+	// 在这操作缓存以及其他操作
 }
