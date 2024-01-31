@@ -14,6 +14,10 @@ type UserHandler struct {
 	passwordExp *regexp.Regexp
 }
 
+func (u UserHandler) RegisterRoutes(engine *gin.Engine) {
+
+}
+
 func NewUserHandler(svc *service.UserService) *UserHandler {
 	const (
 		emailRegexPattern    = "^\\w+([-+.]\\w+)*@\\w+([-.]\\w+)*\\.\\w+([-.]\\w+)*$"

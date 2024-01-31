@@ -24,8 +24,8 @@ func (dao *UserDao) Insert(ctx context.Context, u User) error {
 
 // User 对应数据结构表， 相当于PO, 有些叫model，有些叫数据库层面的entity
 type User struct {
-	Id       int `gorm:"id"`
-	Email    string
+	Id       int64  `gorm:"primaryKey,autoIncrement;id"`
+	Email    string `gorm:"unique"`
 	Password string
 	Created  int64
 	Updated  int64
