@@ -21,11 +21,11 @@ func (u UserHandler) RegisterRoutes(engine *gin.Engine) {
 func NewUserHandler(svc *service.UserService) *UserHandler {
 	const (
 		emailRegexPattern    = "^\\w+([-+.]\\w+)*@\\w+([-.]\\w+)*\\.\\w+([-.]\\w+)*$"
-		passwordRegexPattern = "^(?=.*[A-Za-z])(?=.*\\d)(?=.*[$@$!%*#?&])[A-Za-z\\d$@$]"
+		passwordRegexPattern = "^(?=.*[A-Za-z])(?=.*\\d)(?=.*[$@$!%*#?&])[A-Za-z\\d$@$!%*#?&]{8,}$"
 	)
 
 	emailExp := regexp.MustCompile(emailRegexPattern)
-	passwordExp := regexp.MustCompile(emailRegexPattern)
+	passwordExp := regexp.MustCompile(passwordRegexPattern)
 
 	return &UserHandler{
 		svc:         svc,
@@ -67,6 +67,12 @@ func (u *UserHandler) Signup(ctx *gin.Context) {
 		Email:    req.Email,
 		Password: req.Password,
 	})
+
+	if err == service.ErrUserDuplicateEmail {
+		ctx.String(http.StatusOK, "邮箱冲突")
+		return
+	}
+
 	if err != nil {
 		ctx.String(http.StatusOK, "系统错误")
 		return

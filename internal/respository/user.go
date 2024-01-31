@@ -6,6 +6,10 @@ import (
 	"webbook/internal/respository/dao"
 )
 
+var (
+	ErrUserDuplicateEmail = dao.ErrUserDuplicateEmail
+)
+
 type UserRepository struct {
 	dao *dao.UserDao
 }
