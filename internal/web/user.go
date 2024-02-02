@@ -1,6 +1,7 @@
 package web
 
 import (
+	"github.com/gin-contrib/sessions"
 	"github.com/gin-gonic/gin"
 	"net/http"
 	"regexp"
@@ -14,7 +15,10 @@ type UserHandler struct {
 	passwordExp *regexp.Regexp
 }
 
-func (u UserHandler) RegisterRoutes(engine *gin.Engine) {
+func (u UserHandler) RegisterRoutes(server *gin.Engine) {
+	ug := server.Group("/users")
+	ug.POST("/signup", u.Signup)
+	ug.POST("/login", u.Login)
 
 }
 
@@ -32,6 +36,37 @@ func NewUserHandler(svc *service.UserService) *UserHandler {
 		emailExp:    emailExp,
 		passwordExp: passwordExp,
 	}
+}
+
+func (u *UserHandler) Login(ctx *gin.Context) {
+	type LoginReq struct {
+		Email    string `json:"email"`
+		Password string `json:"password"`
+	}
+
+	var req LoginReq
+
+	if err := ctx.Bind(&req); err != nil {
+		return
+	}
+
+	user, err := u.svc.Login(ctx, req.Email, req.Password)
+	if err == service.ErrInvalidEmailOrPassword {
+		ctx.String(http.StatusOK, "用户名或密码不对")
+		return
+	}
+
+	if err != nil {
+		ctx.String(http.StatusOK, "系统错误")
+		return
+	}
+
+	sess := sessions.Default(ctx)
+	sess.Set("userId", user.Id)
+	sess.Save()
+	ctx.String(http.StatusOK, "登录成功")
+	return
+
 }
 
 func (u *UserHandler) Signup(ctx *gin.Context) {
