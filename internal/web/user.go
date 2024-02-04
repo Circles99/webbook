@@ -3,6 +3,7 @@ package web
 import (
 	"github.com/gin-contrib/sessions"
 	"github.com/gin-gonic/gin"
+	"github.com/golang-jwt/jwt/v5"
 	"net/http"
 	"regexp"
 	"webbook/internal/domain"
@@ -62,11 +63,64 @@ func (u *UserHandler) Login(ctx *gin.Context) {
 	}
 
 	sess := sessions.Default(ctx)
+	sess.Options(sessions.Options{
+		Path:   "",
+		Domain: "",
+		MaxAge: 0,
+		//Secure:   false, // https的协议
+		HttpOnly: false,
+		SameSite: 0,
+	})
 	sess.Set("userId", user.Id)
 	sess.Save()
 	ctx.String(http.StatusOK, "登录成功")
 	return
+}
 
+func (u *UserHandler) LoginJWT(ctx *gin.Context) {
+	type LoginReq struct {
+		Email    string `json:"email"`
+		Password string `json:"password"`
+	}
+
+	var req LoginReq
+
+	if err := ctx.Bind(&req); err != nil {
+		return
+	}
+
+	_, err := u.svc.Login(ctx, req.Email, req.Password)
+	if err == service.ErrInvalidEmailOrPassword {
+		ctx.String(http.StatusOK, "用户名或密码不对")
+		return
+	}
+
+	if err != nil {
+		ctx.String(http.StatusOK, "系统错误")
+		return
+	}
+
+	token := jwt.New(jwt.SigningMethodHS512)
+
+	tokenStr, err := token.SignedString([]byte("dddddddddddddddddacxzcxz"))
+	if err != nil {
+		ctx.String(http.StatusInternalServerError, "系统错误")
+	}
+
+	// 返回token
+	ctx.Header("x-jwt-token", tokenStr)
+	ctx.String(http.StatusOK, "登录成功")
+	return
+}
+
+func (u *UserHandler) Logout(ctx *gin.Context) {
+	sess := sessions.Default(ctx)
+	sess.Options(sessions.Options{
+		MaxAge: -1,
+	})
+	sess.Save()
+	ctx.String(http.StatusOK, "退出登录成功")
+	return
 }
 
 func (u *UserHandler) Signup(ctx *gin.Context) {
