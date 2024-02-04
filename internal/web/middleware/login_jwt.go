@@ -5,6 +5,7 @@ import (
 	"github.com/golang-jwt/jwt/v5"
 	"net/http"
 	"strings"
+	"webbook/internal/web"
 )
 
 type LoginJwtMiddlewareBuilder struct {
@@ -43,16 +44,21 @@ func (l *LoginJwtMiddlewareBuilder) Build() gin.HandlerFunc {
 		}
 
 		tokenStr := segs[1]
-		token, err := jwt.Parse(tokenStr, func(token *jwt.Token) (interface{}, error) {
+
+		claims := &web.UserClaims{}
+
+		token, err := jwt.ParseWithClaims(tokenStr, claims, func(token *jwt.Token) (interface{}, error) {
 			return []byte("dddddddddddddddddacxzcxz"), nil
 		})
 		if err != nil {
 			ctx.AbortWithStatus(http.StatusUnauthorized)
 			return
 		}
-		if token == nil || !token.Valid {
+		if token == nil || !token.Valid || claims.Uid == 0 {
 			ctx.AbortWithStatus(http.StatusUnauthorized)
 			return
 		}
+
+		ctx.Set("claims", claims)
 	}
 }
