@@ -1,11 +1,13 @@
 package web
 
 import (
+	"fmt"
 	"github.com/gin-contrib/sessions"
 	"github.com/gin-gonic/gin"
 	"github.com/golang-jwt/jwt/v5"
 	"net/http"
 	"regexp"
+	"time"
 	"webbook/internal/domain"
 	"webbook/internal/service"
 )
@@ -89,7 +91,7 @@ func (u *UserHandler) LoginJWT(ctx *gin.Context) {
 		return
 	}
 
-	_, err := u.svc.Login(ctx, req.Email, req.Password)
+	user, err := u.svc.Login(ctx, req.Email, req.Password)
 	if err == service.ErrInvalidEmailOrPassword {
 		ctx.String(http.StatusOK, "用户名或密码不对")
 		return
@@ -100,7 +102,12 @@ func (u *UserHandler) LoginJWT(ctx *gin.Context) {
 		return
 	}
 
-	token := jwt.New(jwt.SigningMethodHS512)
+	claims := &UserClaims{
+		RegisteredClaims: jwt.RegisteredClaims{ExpiresAt: jwt.NewNumericDate(time.Now().Add(time.Minute))},
+		UserId:           user.Id,
+	}
+
+	token := jwt.NewWithClaims(jwt.SigningMethodHS512, claims)
 
 	tokenStr, err := token.SignedString([]byte("dddddddddddddddddacxzcxz"))
 	if err != nil {
@@ -168,4 +175,20 @@ func (u *UserHandler) Signup(ctx *gin.Context) {
 	}
 
 	ctx.String(http.StatusOK, "注册成功")
+}
+
+func (u *UserHandler) Profile(ctx *gin.Context) {
+	c, _ := ctx.Get("claims")
+
+	claims, ok := c.(*UserClaims)
+	if !ok {
+		ctx.String(http.StatusOK, "系统错误")
+		return
+	}
+	fmt.Println(claims)
+}
+
+type UserClaims struct {
+	jwt.RegisteredClaims
+	UserId int64
 }

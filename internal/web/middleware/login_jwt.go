@@ -3,8 +3,11 @@ package middleware
 import (
 	"github.com/gin-gonic/gin"
 	"github.com/golang-jwt/jwt/v5"
+	"log"
 	"net/http"
 	"strings"
+	"time"
+	"webbook/internal/web"
 )
 
 type LoginJwtMiddlewareBuilder struct {
@@ -43,16 +46,28 @@ func (l *LoginJwtMiddlewareBuilder) Build() gin.HandlerFunc {
 		}
 
 		tokenStr := segs[1]
-		token, err := jwt.Parse(tokenStr, func(token *jwt.Token) (interface{}, error) {
+
+		claims := &web.UserClaims{}
+		token, err := jwt.ParseWithClaims(tokenStr, claims, func(token *jwt.Token) (interface{}, error) {
 			return []byte("dddddddddddddddddacxzcxz"), nil
 		})
 		if err != nil {
 			ctx.AbortWithStatus(http.StatusUnauthorized)
 			return
 		}
-		if token == nil || !token.Valid {
+		if token == nil || !token.Valid || claims.UserId == 0 {
 			ctx.AbortWithStatus(http.StatusUnauthorized)
 			return
 		}
+
+		claims.ExpiresAt = jwt.NewNumericDate(time.Now().Add(time.Minute))
+
+		tokenStr, err = token.SignedString([]byte("dddddddddddddddddacxzcxz"))
+		if err != nil {
+			log.Println("JWT 续约失败", err)
+		}
+		ctx.Header("x-jwt-token", tokenStr)
+		ctx.Set("claims", claims)
+
 	}
 }
