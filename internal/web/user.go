@@ -7,6 +7,7 @@ import (
 	"github.com/golang-jwt/jwt/v5"
 	"net/http"
 	"regexp"
+	"time"
 	"webbook/internal/domain"
 	"webbook/internal/service"
 )
@@ -101,11 +102,12 @@ func (u *UserHandler) LoginJWT(ctx *gin.Context) {
 		return
 	}
 
-	ckaims := UserClaims{
-		Uid: user.Id,
+	claims := &UserClaims{
+		RegisteredClaims: jwt.RegisteredClaims{ExpiresAt: jwt.NewNumericDate(time.Now().Add(time.Minute))},
+		UserId:           user.Id,
 	}
 
-	token := jwt.NewWithClaims(jwt.SigningMethodHS512, ckaims)
+	token := jwt.NewWithClaims(jwt.SigningMethodHS512, claims)
 
 	tokenStr, err := token.SignedString([]byte("dddddddddddddddddacxzcxz"))
 	if err != nil {
@@ -176,24 +178,17 @@ func (u *UserHandler) Signup(ctx *gin.Context) {
 }
 
 func (u *UserHandler) Profile(ctx *gin.Context) {
-	c, ok := ctx.Get("claims")
-	if !ok {
-		ctx.String(http.StatusOK, "系统错误")
-		return
-	}
+	c, _ := ctx.Get("claims")
 
 	claims, ok := c.(*UserClaims)
 	if !ok {
 		ctx.String(http.StatusOK, "系统错误")
 		return
 	}
-
-	fmt.Println(claims.Uid)
-
+	fmt.Println(claims)
 }
 
 type UserClaims struct {
 	jwt.RegisteredClaims
-	// 声明自己要放进去token的数据
-	Uid int64
+	UserId int64
 }
