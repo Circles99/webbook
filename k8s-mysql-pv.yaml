@@ -1,0 +1,15 @@
+apiVersion: v1
+# 这个指的是k8s有哪些volume
+kind: PersistentVolume
+metadata:
+  name: my-local-pv
+spec:
+  # 需要和pvc中某个 storageClassName 一致
+  storageClassName: manual
+  # 容量
+  capacity:
+    storage: 1Gi
+  accessModes:
+    - ReadWriteOnce
+  hostPath:
+    path: "/mnt/live"

@@ -1,0 +1,22 @@
+#pvc = PersistentVolumeClaim
+apiVersion: v1
+# 一个容器需要存储什么资源，是通过PersistentVolumeClaim来声明的
+# 目前这个文件和k8s-mysql-deployment中Volume配置中webook-mysql-claim对应
+kind: PersistentVolumeClaim
+metadata:
+  # 指的是mysql需要使用的东西
+  name: webook-mysql-claim
+spec:
+  # 可以随便取，但是需要和k8s-mysql-pv中的storageClassName相同
+  storageClassName: manual
+  accessModes:
+    # 一个读写
+    - ReadWriteOnce
+    # 多个读，一个写
+#    - ReadOnlyMany
+    # 多个读写
+#    - ReadWriteMany
+  resources:
+    requests:
+      # 1GB
+      storage: 1Gi
