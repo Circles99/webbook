@@ -31,7 +31,7 @@ spec:
             - containerPort: 3306
       restartPolicy: Always
       # pod中配置的卷，可多个
-      volume:
+      volumes:
         - name: mysql-storage
           persistentVolumeClaim:
             claimName: webook-mysql-claim
