@@ -22,7 +22,6 @@ func NewUserService(repo *respository.UserRepository) *UserService {
 }
 
 func (svc *UserService) SignUp(ctx context.Context, u domain.User) error {
-
 	password, err := bcrypt.GenerateFromPassword([]byte(u.Password), bcrypt.DefaultCost)
 	if err != nil {
 		return err
@@ -46,4 +45,17 @@ func (svc *UserService) Login(ctx context.Context, email, password string) (doma
 		return domain.User{}, ErrInvalidEmailOrPassword
 	}
 	return u, nil
+}
+
+func (svc *UserService) Edit(ctx context.Context, u domain.User) error {
+	password, err := bcrypt.GenerateFromPassword([]byte(u.Password), bcrypt.DefaultCost)
+	if err != nil {
+		return err
+	}
+	u.Password = string(password)
+	return svc.repo.Edit(ctx, u)
+}
+
+func (svc *UserService) Profile(ctx context.Context, userId int64) (domain.User, error) {
+	return svc.repo.FindById(ctx, userId)
 }

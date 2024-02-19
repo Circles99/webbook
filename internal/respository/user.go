@@ -39,3 +39,30 @@ func (r *UserRepository) Create(ctx context.Context, u domain.User) error {
 	})
 	// 在这操作缓存以及其他操作
 }
+
+func (r *UserRepository) Edit(ctx context.Context, u domain.User) error {
+	return r.dao.Edit(ctx, dao.User{
+		Id:       u.Id,
+		Email:    u.Email,
+		Password: u.Password,
+		NickName: u.NickName,
+		Birthday: u.Birthday,
+		Desc:     u.Desc,
+	})
+	// 在这操作缓存以及其他操作
+}
+
+func (r *UserRepository) FindById(ctx context.Context, userId int64) (domain.User, error) {
+	u, err := r.dao.FindById(ctx, userId)
+
+	if err != nil {
+		return domain.User{}, err
+	}
+	return domain.User{
+		Id:       u.Id,
+		Email:    u.Email,
+		NickName: u.NickName,
+		Birthday: u.Birthday,
+		Desc:     u.Desc,
+	}, nil
+}
