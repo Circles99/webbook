@@ -3,6 +3,7 @@ package main
 import (
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
+	"github.com/redis/go-redis"
 	"gorm.io/driver/mysql"
 	"gorm.io/gorm"
 	"net/http"
@@ -54,6 +55,11 @@ func initUser(db *gorm.DB) *web.UserHandler {
 func initWebServer() *gin.Engine {
 	server := gin.Default()
 
+	_ = redis.NewClient(&redis.Options{
+		Addr: "localhost:6379",
+	})
+
+	//server.Use(ratelimit.NewRedisSlidingWindowLimiter(r, time.Second, 100).Limit())
 	server.Use(cors.New(cors.Config{
 		AllowHeaders:     []string{"Content-Type", "Authorization"},
 		ExposeHeaders:    []string{"x-jwt-token"},
