@@ -33,7 +33,7 @@ func main() {
 
 func initDB() *gorm.DB {
 
-	db, err := gorm.Open(mysql.Open("root:root@tcp(localhost:3306)/webook"))
+	db, err := gorm.Open(mysql.Open("root:root@tcp(webook-mysql:3309)/webook"))
 	if err != nil {
 		panic(err)
 	}
@@ -56,7 +56,7 @@ func initWebServer() *gin.Engine {
 	server := gin.Default()
 
 	_ = redis.NewClient(&redis.Options{
-		Addr: "localhost:6379",
+		Addr: "webook-redis:16379",
 	})
 
 	//server.Use(ratelimit.NewRedisSlidingWindowLimiter(r, time.Second, 100).Limit())
