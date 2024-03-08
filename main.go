@@ -8,6 +8,7 @@ import (
 	"gorm.io/gorm"
 	"net/http"
 	"strings"
+	"time"
 	"webbook/internal/respository"
 	"webbook/internal/respository/dao"
 	"webbook/internal/service"
@@ -61,8 +62,9 @@ func initWebServer() *gin.Engine {
 
 	//server.Use(ratelimit.NewRedisSlidingWindowLimiter(r, time.Second, 100).Limit())
 	server.Use(cors.New(cors.Config{
-		AllowHeaders:     []string{"Content-Type", "Authorization"},
-		ExposeHeaders:    []string{"x-jwt-token"},
+		AllowHeaders:  []string{"Content-Type", "Authorization"},
+		ExposeHeaders: []string{"x-jwt-token"},
+		// 是否允许携带cookie
 		AllowCredentials: true,
 		AllowOriginFunc: func(origin string) bool {
 			if strings.HasPrefix(origin, "http://localhost") {
@@ -70,6 +72,7 @@ func initWebServer() *gin.Engine {
 			}
 			return strings.Contains(origin, "你的域名.com")
 		},
+		MaxAge: 12 * time.Hour,
 	}))
 
 	//store := cookie.NewStore([]byte("secret"))
