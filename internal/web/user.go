@@ -102,8 +102,10 @@ func (u *UserHandler) LoginJWT(ctx *gin.Context) {
 	}
 
 	claims := &UserClaims{
-		RegisteredClaims: jwt.RegisteredClaims{ExpiresAt: jwt.NewNumericDate(time.Now().Add(time.Minute))},
-		UserId:           user.Id,
+		RegisteredClaims: jwt.RegisteredClaims{
+			ExpiresAt: jwt.NewNumericDate(time.Now().Add(time.Minute)),
+		},
+		UserId: user.Id,
 	}
 
 	token := jwt.NewWithClaims(jwt.SigningMethodHS512, claims)
