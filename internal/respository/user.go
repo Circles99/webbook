@@ -3,6 +3,7 @@ package respository
 import (
 	"context"
 	"webbook/internal/domain"
+	"webbook/internal/respository/cache"
 	"webbook/internal/respository/dao"
 )
 
@@ -12,11 +13,12 @@ var (
 )
 
 type UserRepository struct {
-	dao *dao.UserDao
+	dao   *dao.UserDao
+	cache *cache.UserCache
 }
 
-func NewUserRepository(dao *dao.UserDao) *UserRepository {
-	return &UserRepository{dao: dao}
+func NewUserRepository(dao *dao.UserDao, c *cache.UserCache) *UserRepository {
+	return &UserRepository{dao: dao, cache: c}
 }
 
 func (r *UserRepository) FindByEmail(ctx context.Context, email string) (domain.User, error) {
@@ -53,16 +55,33 @@ func (r *UserRepository) Edit(ctx context.Context, u domain.User) error {
 }
 
 func (r *UserRepository) FindById(ctx context.Context, userId int64) (domain.User, error) {
-	u, err := r.dao.FindById(ctx, userId)
 
+	u, err := r.cache.Get(ctx, userId)
+	if err == nil {
+		return u, nil
+	}
+
+	//if err == cache.ErrUserNotFound {
+	//
+	//}
+	user, err := r.dao.FindById(ctx, userId)
 	if err != nil {
 		return domain.User{}, err
 	}
-	return domain.User{
-		Id:       u.Id,
-		Email:    u.Email,
-		NickName: u.NickName,
-		Birthday: u.Birthday,
-		Desc:     u.Desc,
-	}, nil
+
+	u = domain.User{
+		Id:       user.Id,
+		Email:    user.Email,
+		NickName: user.NickName,
+		Birthday: user.Birthday,
+		Desc:     user.Desc,
+	}
+	go func() {
+		err = r.cache.Set(ctx, u)
+		if err != nil {
+			// 写入日志
+		}
+	}()
+
+	return u, nil
 }
