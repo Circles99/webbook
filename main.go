@@ -9,8 +9,8 @@ import (
 	"net/http"
 	"strings"
 	"time"
-	"webbook/internal/respository"
-	"webbook/internal/respository/dao"
+	"webbook/internal/repository"
+	"webbook/internal/repository/dao"
 	"webbook/internal/service"
 	"webbook/internal/web"
 	"webbook/internal/web/middleware"
@@ -47,7 +47,7 @@ func initDB() *gorm.DB {
 }
 
 func initUser(db *gorm.DB) *web.UserHandler {
-	repo := respository.NewUserRepository(dao.NewUserDao(db))
+	repo := repository.NewUserRepository(dao.NewUserDao(db))
 	svc := service.NewUserService(repo)
 	u := web.NewUserHandler(svc)
 	return u

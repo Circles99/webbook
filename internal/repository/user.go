@@ -1,10 +1,10 @@
-package respository
+package repository
 
 import (
 	"context"
 	"webbook/internal/domain"
-	"webbook/internal/respository/cache"
-	"webbook/internal/respository/dao"
+	"webbook/internal/repository/cache"
+	"webbook/internal/repository/dao"
 )
 
 var (
