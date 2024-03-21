@@ -27,7 +27,7 @@ func (u *CodeService) Send(ctx context.Context, biz, phone string) error {
 }
 
 func (u *CodeService) Verify(ctx context.Context, biz, phone, inputCode string) (bool, error) {
-
+	return u.repo.Verify(ctx, biz, phone, inputCode)
 }
 
 func (u *CodeService) generateCode() string {
