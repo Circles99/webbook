@@ -11,8 +11,12 @@ import (
 const codeTplId = "1877555"
 
 type CodeService struct {
-	repo   repository.CodeRepository
+	repo   *repository.CodeRepository
 	smsSvc sms.Service
+}
+
+func NewCodeService(repo *repository.CodeRepository, smsSvc sms.Service) *CodeService {
+	return &CodeService{repo: repo, smsSvc: smsSvc}
 }
 
 func (u *CodeService) Send(ctx context.Context, biz, phone string) error {

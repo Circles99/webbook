@@ -13,6 +13,7 @@ import (
 
 type UserHandler struct {
 	svc         *service.UserService
+	codeSvc     *service.CodeService
 	emailExp    *regexp.Regexp
 	passwordExp *regexp.Regexp
 }
@@ -21,10 +22,13 @@ func (u UserHandler) RegisterRoutes(server *gin.Engine) {
 	ug := server.Group("/users")
 	ug.POST("/signup", u.Signup)
 	ug.POST("/login", u.Login)
+	ug.POST("/profile", u.Profile)
+	ug.POST("/login_sms/code/send ", u.SendLoginSMSCode)
+	//ug.POST("/login_sms/code/send ", u.Verify)
 
 }
 
-func NewUserHandler(svc *service.UserService) *UserHandler {
+func NewUserHandler(svc *service.UserService, codeSvc *service.CodeService) *UserHandler {
 	const (
 		emailRegexPattern    = "^\\w+([-+.]\\w+)*@\\w+([-.]\\w+)*\\.\\w+([-.]\\w+)*$"
 		passwordRegexPattern = "^(?=.*[A-Za-z])(?=.*\\d)(?=.*[$@$!%*#?&])[A-Za-z\\d$@$!%*#?&]{8,}$"
@@ -35,9 +39,29 @@ func NewUserHandler(svc *service.UserService) *UserHandler {
 
 	return &UserHandler{
 		svc:         svc,
+		codeSvc:     codeSvc,
 		emailExp:    emailExp,
 		passwordExp: passwordExp,
 	}
+}
+
+func (u *UserHandler) SendLoginSMSCode(ctx *gin.Context) {
+
+	type Req struct {
+		Phone string `json:"phone"`
+	}
+
+	var req Req
+	if err := ctx.Bind(&req); err != nil {
+		return
+	}
+
+	err := u.codeSvc.Send(ctx, "login", req.Phone)
+	if err != nil {
+		ctx.String(http.StatusOK, "系统异常")
+		return
+	}
+	ctx.String(http.StatusOK, "发送成功")
 }
 
 func (u *UserHandler) Login(ctx *gin.Context) {

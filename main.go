@@ -3,15 +3,17 @@ package main
 import (
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
-	"github.com/redis/go-redis"
+	"github.com/redis/go-redis/v9"
 	"gorm.io/driver/mysql"
 	"gorm.io/gorm"
 	"net/http"
 	"strings"
 	"time"
 	"webbook/internal/repository"
+	"webbook/internal/repository/cache"
 	"webbook/internal/repository/dao"
 	"webbook/internal/service"
+	"webbook/internal/service/sms/tencent"
 	"webbook/internal/web"
 	"webbook/internal/web/middleware"
 )
@@ -46,10 +48,13 @@ func initDB() *gorm.DB {
 	return db
 }
 
-func initUser(db *gorm.DB) *web.UserHandler {
-	repo := repository.NewUserRepository(dao.NewUserDao(db))
+func initUser(db *gorm.DB, rdb redis.Cmdable) *web.UserHandler {
+	repo := repository.NewUserRepository(dao.NewUserDao(db), cache.NewUserCache(rdb))
 	svc := service.NewUserService(repo)
-	u := web.NewUserHandler(svc)
+
+	codeRepo := repository.NewCodeRepository(cache.NewCodeCache(rdb))
+	codeSvc := service.NewCodeService(codeRepo, tencent.NewService(nil, "", ""))
+	u := web.NewUserHandler(svc, codeSvc)
 	return u
 }
 
