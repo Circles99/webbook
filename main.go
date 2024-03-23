@@ -20,18 +20,24 @@ import (
 
 func main() {
 
-	//db := initDB()
-	//server := initWebServer()
-	//u := initUser(db)
-	//u.RegisterRoutes(server)
+	db := initDB()
+	server := initWebServer()
 
-	server := gin.Default()
+	redisClient := redis.NewClient(&redis.Options{
+		Addr: "127.0.0.1:16379",
+	})
+	u := initUser(db, redisClient)
+	u.RegisterRoutes(server)
+
+	//server := gin.Default()
 	server.GET("/hello", func(ctx *gin.Context) {
 		ctx.String(http.StatusOK, "你好")
 	})
 
-	server.Run(":8080")
-
+	err := server.Run(":8080")
+	if err != nil {
+		panic(err)
+	}
 }
 
 func initDB() *gorm.DB {
@@ -90,7 +96,12 @@ func initWebServer() *gin.Engine {
 
 	// 登录校验
 	//server.Use(middleware.NewLoginMiddlewareBuilder().IgnorePaths("/users/login").IgnorePaths("/users/signupt").Build())
-	server.Use(middleware.NewLoginJwtMiddlewareBuilder().IgnorePaths("/users/login").IgnorePaths("/users/signupt").Build())
+	server.Use(middleware.NewLoginJwtMiddlewareBuilder().
+		IgnorePaths("/users/login").
+		IgnorePaths("/users/signupt").
+		IgnorePaths("/users/login_sms/code/send").
+		IgnorePaths("/users/login_sms").
+		Build())
 
 	return server
 }

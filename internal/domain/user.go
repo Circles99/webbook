@@ -7,6 +7,7 @@ import "time"
 type User struct {
 	Id       int64
 	Email    string
+	Phone    string
 	Password string
 	NickName string
 	Birthday string

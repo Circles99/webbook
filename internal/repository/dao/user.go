@@ -2,6 +2,7 @@ package dao
 
 import (
 	"context"
+	"database/sql"
 	"errors"
 	"github.com/go-sql-driver/mysql"
 	"gorm.io/gorm"
@@ -9,8 +10,8 @@ import (
 )
 
 var (
-	ErrUserDuplicateEmail = errors.New("邮箱冲突")
-	ErrUserNotFound       = gorm.ErrRecordNotFound
+	ErrUserDuplicate = errors.New("邮箱冲突")
+	ErrUserNotFound  = gorm.ErrRecordNotFound
 )
 
 type UserDao struct {
@@ -24,6 +25,12 @@ func NewUserDao(db *gorm.DB) *UserDao {
 func (dao *UserDao) FindByEmail(ctx context.Context, email string) (User, error) {
 	var u User
 	err := dao.db.WithContext(ctx).Where("email = ?", email).First(&u).Error
+	return u, err
+}
+
+func (dao *UserDao) FindByPhone(ctx context.Context, phone string) (User, error) {
+	var u User
+	err := dao.db.WithContext(ctx).Where("phone = ?", phone).First(&u).Error
 	return u, err
 }
 
@@ -44,7 +51,7 @@ func (dao *UserDao) Insert(ctx context.Context, u User) error {
 		const uniqueConflicts uint16 = 1062
 		if mysqlErr.Number == uniqueConflicts {
 			// 邮箱冲突
-			return ErrUserDuplicateEmail
+			return ErrUserDuplicate
 		}
 	}
 	return err
@@ -60,7 +67,7 @@ func (dao *UserDao) Edit(ctx context.Context, u User) error {
 		const uniqueConflicts uint16 = 1062
 		if mysqlErr.Number == uniqueConflicts {
 			// 邮箱冲突
-			return ErrUserDuplicateEmail
+			return ErrUserDuplicate
 		}
 	}
 	return err
@@ -68,8 +75,9 @@ func (dao *UserDao) Edit(ctx context.Context, u User) error {
 
 // User 对应数据结构表， 相当于PO, 有些叫model，有些叫数据库层面的entity
 type User struct {
-	Id       int64  `gorm:"primaryKey,autoIncrement;id"`
-	Email    string `gorm:"unique"`
+	Id       int64          `gorm:"primaryKey,autoIncrement;id"`
+	Email    sql.NullString `gorm:"unique"`
+	Phone    sql.NullString `gorm:"unique"`
 	Password string
 	NickName string
 	Birthday string
