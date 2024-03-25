@@ -13,16 +13,21 @@ const codeTplId = "1877555"
 var ErrCodeVerifyTooManyTimes = repository.ErrCodeVerifyTooManyTimes
 var ErrSetCodeTooMany = repository.ErrSetCodeTooMany
 
-type CodeService struct {
-	repo   *repository.CodeRepository
+type CodeService interface {
+	Send(ctx context.Context, biz, phone string) error
+	Verify(ctx context.Context, biz, phone, inputCode string) (bool, error)
+}
+
+type CodeServiceImpl struct {
+	repo   repository.CodeRepository
 	smsSvc sms.Service
 }
 
-func NewCodeService(repo *repository.CodeRepository, smsSvc sms.Service) *CodeService {
-	return &CodeService{repo: repo, smsSvc: smsSvc}
+func NewCodeService(repo repository.CodeRepository, smsSvc sms.Service) CodeService {
+	return &CodeServiceImpl{repo: repo, smsSvc: smsSvc}
 }
 
-func (u *CodeService) Send(ctx context.Context, biz, phone string) error {
+func (u *CodeServiceImpl) Send(ctx context.Context, biz, phone string) error {
 	code := u.generateCode()
 	err := u.repo.Store(ctx, biz, phone, code)
 	if err != nil {
@@ -33,11 +38,11 @@ func (u *CodeService) Send(ctx context.Context, biz, phone string) error {
 	return u.smsSvc.Send(ctx, codeTplId, []string{code}, phone)
 }
 
-func (u *CodeService) Verify(ctx context.Context, biz, phone, inputCode string) (bool, error) {
+func (u *CodeServiceImpl) Verify(ctx context.Context, biz, phone, inputCode string) (bool, error) {
 	return u.repo.Verify(ctx, biz, phone, inputCode)
 }
 
-func (u *CodeService) generateCode() string {
+func (u *CodeServiceImpl) generateCode() string {
 	num := rand.Intn(1000000)
 	// 不够6位的，加上前导0
 	return fmt.Sprintf("%06d", num)
