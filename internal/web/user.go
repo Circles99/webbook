@@ -33,8 +33,8 @@ func (u UserHandler) RegisterRoutes(server *gin.Engine) {
 
 func NewUserHandler(svc service.UserService, codeSvc service.CodeService) *UserHandler {
 	const (
-		emailRegexPattern    = "^\\w+([-+.]\\w+)*@\\w+([-.]\\w+)*\\.\\w+([-.]\\w+)*$"
-		passwordRegexPattern = "^(?=.*[A-Za-z])(?=.*\\d)(?=.*[$@$!%*#?&])[A-Za-z\\d$@$!%*#?&]{8,}$"
+		emailRegexPattern    = `^\w+([-+.]\\w+)*@\w+([-.]\\w+)*\.\w+([-.]\w+)*$`
+		passwordRegexPattern = `^(?=.*[A-Za-z])(?=.*\d)(?=.*[$@$!%*#?&])[A-Za-z\d$@$!%*#?&]{8,}$`
 	)
 
 	emailExp := regexp.MustCompile(emailRegexPattern)
