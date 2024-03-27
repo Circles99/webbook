@@ -11,3 +11,10 @@ docker:
 	@docker rmi -f circles99/webook:v0.0.1
 	# 打包到docker镜像
 	@docker build -t circles99/webook:v0.0.1 .
+
+
+.PHONY: mock
+mock:
+	@mockgen -source=./internal/service/user.go -destination=./internal/service/user_mock.go -package=user
+	@mockgen -source=./internal/service/code.go -destination=./internal/service/code_mock.go -package=svcmocks
+	@go mod tidy
