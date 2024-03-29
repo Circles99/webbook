@@ -66,6 +66,8 @@ func (r *CacheUserRepository) FindById(ctx context.Context, userId int64) (domai
 	}
 
 	u = r.entityToDomain(user)
+
+	//_ = r.cache.Set(ctx, u)
 	go func() {
 		err = r.cache.Set(ctx, u)
 		if err != nil {
