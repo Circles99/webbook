@@ -15,10 +15,15 @@ docker:
 
 .PHONY: mock
 mock:
+    # mock service
 	@mockgen -source=./internal/service/user.go -destination=./internal/service/mocks/user_mock.go -package=svcmocks
 	@mockgen -source=./internal/service/code.go -destination=./internal/service/mocks/code_mock.go -package=svcmocks
+    # mock repository
 	@mockgen -source=./internal/repository/code.go -destination=./internal/repository/mocks/code_mock.go -package=repmocks
 	@mockgen -source=./internal/repository/user.go -destination=./internal/repository/mocks/user_mock.go -package=repmocks
+	# mock dao
 	@mockgen -source=./internal/repository/dao/user.go -destination=./internal/repository/dao/mocks/user_mock.go -package=daomocks
 	@mockgen -source=./internal/repository/cache/user.go -destination=./internal/repository/cache/mocks/user_mock.go -package=cachemocks
+	# mock redis
+	@mockgen -package=redismocks -destination=./internal/repository/cache/redismocks/cmdable.mock.go github.com/redis/go-redis/v9 Cmdable
 	@go mod tidy
