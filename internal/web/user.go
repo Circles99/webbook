@@ -1,11 +1,12 @@
 package web
 
 import (
+	"fmt"
+	regexp "github.com/dlclark/regexp2"
 	"github.com/gin-contrib/sessions"
 	"github.com/gin-gonic/gin"
 	"github.com/golang-jwt/jwt/v5"
 	"net/http"
-	"regexp"
 	"time"
 	"webbook/internal/domain"
 	"webbook/internal/service"
@@ -37,8 +38,8 @@ func NewUserHandler(svc service.UserService, codeSvc service.CodeService) *UserH
 		passwordRegexPattern = `^(?=.*[A-Za-z])(?=.*\d)(?=.*[$@$!%*#?&])[A-Za-z\d$@$!%*#?&]{8,}$`
 	)
 
-	emailExp := regexp.MustCompile(emailRegexPattern)
-	passwordExp := regexp.MustCompile(passwordRegexPattern)
+	emailExp := regexp.MustCompile(emailRegexPattern, regexp.None)
+	passwordExp := regexp.MustCompile(passwordRegexPattern, regexp.None)
 
 	return &UserHandler{
 		svc:         svc,
@@ -87,10 +88,12 @@ func (u *UserHandler) LoginSms(ctx *gin.Context) {
 		Phone string `json:"phone"`
 		Code  string `json:"code"`
 	}
+
 	var req Req
 	if err := ctx.Bind(&req); err != nil {
 		return
 	}
+	fmt.Println("xxx")
 
 	ok, err := u.codeSvc.Verify(ctx, biz, req.Phone, req.Code)
 	if err != nil {
@@ -241,8 +244,13 @@ func (u *UserHandler) Signup(ctx *gin.Context) {
 		return
 	}
 
-	ok := u.emailExp.MatchString(req.Email)
-	if !ok {
+	isEmail, err := u.emailExp.MatchString(req.Email)
+	if err != nil {
+		ctx.String(http.StatusOK, "系统错误")
+		return
+	}
+
+	if !isEmail {
 		ctx.String(http.StatusOK, "邮箱错误")
 		return
 	}
@@ -252,12 +260,17 @@ func (u *UserHandler) Signup(ctx *gin.Context) {
 		return
 	}
 
-	ok = u.passwordExp.MatchString(req.Password)
-	if !ok {
+	isPassword, err := u.passwordExp.MatchString(req.Password)
+	if err != nil {
+		ctx.String(http.StatusOK, "系统错误")
+		return
+	}
+
+	if !isPassword {
 		ctx.String(http.StatusOK, "密码必须大于8为，包含数字，字母，特殊符号")
 		return
 	}
-	err := u.svc.SignUp(ctx, domain.User{
+	err = u.svc.SignUp(ctx, domain.User{
 		Email:    req.Email,
 		Password: req.Password,
 	})
