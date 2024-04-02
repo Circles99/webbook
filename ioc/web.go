@@ -8,7 +8,7 @@ import (
 	"time"
 	"webbook/internal/web"
 	"webbook/internal/web/middleware"
-	"webbook/pkg/ratelimit"
+	"webbook/pkg/middlewares/ratelimit"
 )
 
 func InitWebServer(mdls []gin.HandlerFunc, hdl *web.UserHandler) *gin.Engine {

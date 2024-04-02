@@ -15,7 +15,7 @@ docker:
 
 .PHONY: mock
 mock:
-    # mock service
+    # mock service.go
 	@mockgen -source=./internal/service/user.go -destination=./internal/service/mocks/user_mock.go -package=svcmocks
 	@mockgen -source=./internal/service/code.go -destination=./internal/service/mocks/code_mock.go -package=svcmocks
     # mock repository
