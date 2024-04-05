@@ -12,7 +12,11 @@ import (
 	"webbook/internal/service"
 )
 
-const biz = "login"
+const (
+	biz = "login"
+
+	SaltKey = "dddddddddddddddddacxzcxz"
+)
 
 type UserHandler struct {
 	svc         service.UserService
@@ -211,7 +215,7 @@ func (u *UserHandler) setJwtToken(ctx *gin.Context, uid int64) error {
 
 	token := jwt.NewWithClaims(jwt.SigningMethodHS512, claims)
 
-	tokenStr, err := token.SignedString([]byte("dddddddddddddddddacxzcxz"))
+	tokenStr, err := token.SignedString([]byte(SaltKey))
 	if err != nil {
 		return err
 	}

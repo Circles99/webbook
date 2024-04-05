@@ -14,15 +14,15 @@ type TimeoutFailoverSmsService struct {
 
 	// 连续超时的个数
 	cnt int32
-
 	// 阈值
 	// 连续超过这个数字就要切换
 	threshold int32
 }
 
-func NewTimeoutFailoverSmsService(svcs []sms.Service) sms.Service {
+func NewTimeoutFailoverSmsService(svcs []sms.Service, threshold int32) sms.Service {
 	return &TimeoutFailoverSmsService{
-		svcs: svcs,
+		svcs:      svcs,
+		threshold: threshold,
 	}
 }
 
@@ -62,5 +62,4 @@ func (t TimeoutFailoverSmsService) Send(ctx context.Context, tplId string, args 
 		// 非超市，直接下一个
 		return err
 	}
-	return nil
 }

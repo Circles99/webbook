@@ -8,7 +8,8 @@ import (
 	"time"
 	"webbook/internal/web"
 	"webbook/internal/web/middleware"
-	"webbook/pkg/middlewares/ratelimit"
+	mdwratelimit "webbook/pkg/middlewares/ratelimit"
+	"webbook/pkg/ratelimit"
 )
 
 func InitWebServer(mdls []gin.HandlerFunc, hdl *web.UserHandler) *gin.Engine {
@@ -27,7 +28,7 @@ func InitMiddlewares(redisClient redis.Cmdable) []gin.HandlerFunc {
 			IgnorePaths("/users/login_sms/code/send").
 			IgnorePaths("/users/login_sms").
 			Build(),
-		ratelimit.NewRedisSlidingWindowLimiter(redisClient, time.Second, 100).Build(),
+		mdwratelimit.NewRedisSlidingWindowLimiter(ratelimit.NewRedisSlidingWindowLimiter(redisClient, time.Second, 100)).Build(),
 	}
 }
 

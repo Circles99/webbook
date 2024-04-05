@@ -3,6 +3,7 @@ package repository
 import (
 	"context"
 	"database/sql"
+	"log"
 	"time"
 	"webbook/internal/domain"
 	"webbook/internal/repository/cache"
@@ -72,6 +73,7 @@ func (r *CacheUserRepository) FindById(ctx context.Context, userId int64) (domai
 		err = r.cache.Set(ctx, u)
 		if err != nil {
 			// 写入日志
+			log.Println(err)
 		}
 	}()
 

@@ -49,7 +49,7 @@ func (l *LoginJwtMiddlewareBuilder) Build() gin.HandlerFunc {
 
 		claims := &web.UserClaims{}
 		token, err := jwt.ParseWithClaims(tokenStr, claims, func(token *jwt.Token) (interface{}, error) {
-			return []byte("dddddddddddddddddacxzcxz"), nil
+			return []byte(web.SaltKey), nil
 		})
 		if err != nil {
 			ctx.AbortWithStatus(http.StatusUnauthorized)
@@ -62,7 +62,7 @@ func (l *LoginJwtMiddlewareBuilder) Build() gin.HandlerFunc {
 
 		claims.ExpiresAt = jwt.NewNumericDate(time.Now().Add(time.Minute))
 
-		tokenStr, err = token.SignedString([]byte("dddddddddddddddddacxzcxz"))
+		tokenStr, err = token.SignedString([]byte(web.SaltKey))
 		if err != nil {
 			log.Println("JWT 续约失败", err)
 		}
