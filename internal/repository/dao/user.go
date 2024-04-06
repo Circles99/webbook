@@ -17,6 +17,7 @@ var (
 type UserDao interface {
 	FindByEmail(ctx context.Context, email string) (User, error)
 	FindByPhone(ctx context.Context, phone string) (User, error)
+	FindByWechat(ctx context.Context, openId string) (User, error)
 	FindById(ctx context.Context, id int64) (User, error)
 	Insert(ctx context.Context, u User) error
 	Edit(ctx context.Context, u User) error
@@ -45,6 +46,12 @@ func (dao *GORMUserDao) FindByPhone(ctx context.Context, phone string) (User, er
 func (dao *GORMUserDao) FindById(ctx context.Context, id int64) (User, error) {
 	var u User
 	err := dao.db.WithContext(ctx).Where("id = ?", id).First(&u).Error
+	return u, err
+}
+
+func (dao *GORMUserDao) FindByWechat(ctx context.Context, openId string) (User, error) {
+	var u User
+	err := dao.db.WithContext(ctx).Where("wechat_open_id = ?", openId).First(&u).Error
 	return u, err
 }
 
@@ -83,13 +90,15 @@ func (dao *GORMUserDao) Edit(ctx context.Context, u User) error {
 
 // User 对应数据结构表， 相当于PO, 有些叫model，有些叫数据库层面的entity
 type User struct {
-	Id       int64          `gorm:"primaryKey,autoIncrement;id"`
-	Email    sql.NullString `gorm:"unique"`
-	Phone    sql.NullString `gorm:"unique"`
-	Password string
-	NickName string
-	Birthday string
-	Desc     string
-	Created  int64
-	Updated  int64
+	Id            int64          `gorm:"primaryKey,autoIncrement;id"`
+	Email         sql.NullString `gorm:"unique"`
+	Phone         sql.NullString `gorm:"unique"`
+	Password      string
+	NickName      string
+	Birthday      string
+	Desc          string
+	WechatUnionId sql.NullString
+	WechatOpenId  sql.NullString `gorm:"unique"`
+	Created       int64
+	Updated       int64
 }

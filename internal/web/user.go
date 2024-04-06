@@ -5,9 +5,7 @@ import (
 	regexp "github.com/dlclark/regexp2"
 	"github.com/gin-contrib/sessions"
 	"github.com/gin-gonic/gin"
-	"github.com/golang-jwt/jwt/v5"
 	"net/http"
-	"time"
 	"webbook/internal/domain"
 	"webbook/internal/service"
 )
@@ -23,6 +21,7 @@ type UserHandler struct {
 	codeSvc     service.CodeService
 	emailExp    *regexp.Regexp
 	passwordExp *regexp.Regexp
+	JwtHandler
 }
 
 func (u UserHandler) RegisterRoutes(server *gin.Engine) {
@@ -205,26 +204,6 @@ func (u *UserHandler) LoginJWT(ctx *gin.Context) {
 	ctx.String(http.StatusOK, "登录成功")
 }
 
-func (u *UserHandler) setJwtToken(ctx *gin.Context, uid int64) error {
-	claims := &UserClaims{
-		RegisteredClaims: jwt.RegisteredClaims{
-			ExpiresAt: jwt.NewNumericDate(time.Now().Add(time.Minute)),
-		},
-		UserId: uid,
-	}
-
-	token := jwt.NewWithClaims(jwt.SigningMethodHS512, claims)
-
-	tokenStr, err := token.SignedString([]byte(SaltKey))
-	if err != nil {
-		return err
-	}
-
-	// 返回token
-	ctx.Header("x-jwt-token", tokenStr)
-	return nil
-}
-
 func (u *UserHandler) Logout(ctx *gin.Context) {
 	sess := sessions.Default(ctx)
 	sess.Options(sessions.Options{
@@ -308,9 +287,4 @@ func (u *UserHandler) Profile(ctx *gin.Context) {
 	}
 
 	ctx.JSON(http.StatusOK, user)
-}
-
-type UserClaims struct {
-	jwt.RegisteredClaims
-	UserId int64
 }
