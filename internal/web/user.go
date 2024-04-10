@@ -5,6 +5,7 @@ import (
 	regexp "github.com/dlclark/regexp2"
 	"github.com/gin-contrib/sessions"
 	"github.com/gin-gonic/gin"
+	"github.com/golang-jwt/jwt/v5"
 	"net/http"
 	"webbook/internal/domain"
 	"webbook/internal/service"
@@ -12,8 +13,6 @@ import (
 
 const (
 	biz = "login"
-
-	SaltKey = "dddddddddddddddddacxzcxz"
 )
 
 type UserHandler struct {
@@ -31,6 +30,7 @@ func (u UserHandler) RegisterRoutes(server *gin.Engine) {
 	ug.POST("/profile", u.Profile)
 	ug.POST("/login_sms/code/send", u.SendLoginSMSCode)
 	ug.POST("/login_sms", u.LoginSms)
+	ug.POST("/refresh_token", u.RefreshToken)
 	//ug.POST("/login_sms/code/send ", u.Verify)
 
 }
@@ -49,6 +49,7 @@ func NewUserHandler(svc service.UserService, codeSvc service.CodeService) *UserH
 		codeSvc:     codeSvc,
 		emailExp:    emailExp,
 		passwordExp: passwordExp,
+		JwtHandler:  NewJwtHandler(),
 	}
 }
 
@@ -84,6 +85,31 @@ func (u *UserHandler) SendLoginSMSCode(ctx *gin.Context) {
 	ctx.JSON(http.StatusOK, Result{
 		Msg: "发送成功",
 	})
+}
+
+// RefreshToken  todo:可做成同时刷新refreshtoken,redis中记录是否有效
+func (u *UserHandler) RefreshToken(ctx *gin.Context) {
+	// 只有这个接口拿出来的才是refresh_token, ，其他都是access_token
+	refreshToken := ExtractToken(ctx)
+	var rc RefreshClaims
+	token, err := jwt.ParseWithClaims(refreshToken, &rc, func(token *jwt.Token) (interface{}, error) {
+		return u.rtKey, nil
+	})
+	if err != nil || !token.Valid {
+		ctx.AbortWithStatus(http.StatusUnauthorized)
+		return
+	}
+
+	err = u.setJwtToken(ctx, rc.UserId)
+	if err != nil {
+		ctx.AbortWithStatus(http.StatusUnauthorized)
+		return
+	}
+
+	ctx.JSON(http.StatusOK, Result{
+		Msg: "OK",
+	})
+
 }
 
 func (u *UserHandler) LoginSms(ctx *gin.Context) {
@@ -123,6 +149,14 @@ func (u *UserHandler) LoginSms(ctx *gin.Context) {
 		return
 	}
 	if err = u.setJwtToken(ctx, user.Id); err != nil {
+		ctx.JSON(http.StatusOK, Result{
+			Code: 5,
+			Msg:  "系统错误",
+		})
+		return
+	}
+
+	if err = u.setRefreshToken(ctx, user.Id); err != nil {
 		ctx.JSON(http.StatusOK, Result{
 			Code: 5,
 			Msg:  "系统错误",
@@ -201,6 +235,13 @@ func (u *UserHandler) LoginJWT(ctx *gin.Context) {
 		ctx.String(http.StatusOK, "系统错误")
 		return
 	}
+
+	err = u.setRefreshToken(ctx, user.Id)
+	if err != nil {
+		ctx.String(http.StatusOK, "系统错误")
+		return
+	}
+
 	ctx.String(http.StatusOK, "登录成功")
 }
 
