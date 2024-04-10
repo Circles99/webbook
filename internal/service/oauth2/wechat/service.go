@@ -4,7 +4,6 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	uuid "github.com/lithammer/shortuuid/v4"
 	"net/http"
 	"net/url"
 	"webbook/internal/domain"
@@ -18,8 +17,8 @@ const (
 )
 
 type Service interface {
-	AuthURL(ctx context.Context) (string, error)
-	VerifyCode(ctx context.Context, code, state string) (domain.WechatInfo, error)
+	AuthURL(ctx context.Context, state string) (string, error)
+	VerifyCode(ctx context.Context, code string) (domain.WechatInfo, error)
 }
 
 type WechatService struct {
@@ -36,13 +35,13 @@ func NewWechatService(appId, appSecret string) Service {
 	}
 }
 
-func (w *WechatService) AuthURL(ctx context.Context) (string, error) {
-	state := uuid.New()
+func (w *WechatService) AuthURL(ctx context.Context, state string) (string, error) {
+
 	return fmt.Sprintf(UrlPattern, w.appId, redirectUri, state), nil
 
 }
 
-func (w *WechatService) VerifyCode(ctx context.Context, code, state string) (domain.WechatInfo, error) {
+func (w *WechatService) VerifyCode(ctx context.Context, code string) (domain.WechatInfo, error) {
 	req, err := http.NewRequestWithContext(ctx, http.MethodGet, fmt.Sprintf(targetPattern, w.appId, w.appSecret, code), nil)
 	if err != nil {
 		return domain.WechatInfo{}, err

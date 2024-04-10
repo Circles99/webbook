@@ -30,6 +30,7 @@ func InitWebServer() *gin.Engine {
 		ioc.InitWebServer,
 		ioc.InitMiddlewares,
 		ioc.InitOAuth2WechatService,
+		ioc.NewWechatHandlerConfig,
 	)
 	return new(gin.Engine)
 }
