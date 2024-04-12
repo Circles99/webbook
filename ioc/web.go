@@ -7,6 +7,7 @@ import (
 	"strings"
 	"time"
 	"webbook/internal/web"
+	ijwt "webbook/internal/web/jwt"
 	"webbook/internal/web/middleware"
 	mdwratelimit "webbook/pkg/middlewares/ratelimit"
 	"webbook/pkg/ratelimit"
@@ -20,10 +21,10 @@ func InitWebServer(mdls []gin.HandlerFunc, hdl *web.UserHandler, oauth2WechatHdl
 	return server
 }
 
-func InitMiddlewares(redisClient redis.Cmdable) []gin.HandlerFunc {
+func InitMiddlewares(redisClient redis.Cmdable, jwtHdl ijwt.Handler) []gin.HandlerFunc {
 	return []gin.HandlerFunc{
 		corsHdl(),
-		middleware.NewLoginJwtMiddlewareBuilder().
+		middleware.NewLoginJwtMiddlewareBuilder(jwtHdl).
 			IgnorePaths("/users/login").
 			IgnorePaths("/users/signupt").
 			IgnorePaths("/users/refresh_token").

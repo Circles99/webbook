@@ -10,6 +10,7 @@ import (
 	"webbook/internal/repository/dao"
 	"webbook/internal/service"
 	"webbook/internal/web"
+	"webbook/internal/web/jwt"
 	"webbook/ioc"
 )
 
@@ -27,6 +28,10 @@ func InitWebServer() *gin.Engine {
 		web.NewUserHandler,
 		web.NewOAuth2WechatHandler,
 
+		// jwt
+		jwt.NewRedisJwtHandler,
+
+		// init
 		ioc.InitWebServer,
 		ioc.InitMiddlewares,
 		ioc.InitOAuth2WechatService,

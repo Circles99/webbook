@@ -4,14 +4,15 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/golang-jwt/jwt/v5"
 	"net/http"
-	"webbook/internal/web"
+	ijwt "webbook/internal/web/jwt"
 )
 
 type LoginJwtMiddlewareBuilder struct {
 	paths []string
+	ijwt.Handler
 }
 
-func NewLoginJwtMiddlewareBuilder() *LoginJwtMiddlewareBuilder {
+func NewLoginJwtMiddlewareBuilder(jwthdl ijwt.Handler) *LoginJwtMiddlewareBuilder {
 	return &LoginJwtMiddlewareBuilder{}
 }
 
@@ -30,17 +31,29 @@ func (l *LoginJwtMiddlewareBuilder) Build() gin.HandlerFunc {
 		}
 
 		// 用jwt校验
-		tokenStr := web.ExtractToken(ctx)
+		tokenStr := l.ExtractToken(ctx)
 
-		claims := &web.UserClaims{}
+		claims := &ijwt.UserClaims{}
 		token, err := jwt.ParseWithClaims(tokenStr, claims, func(token *jwt.Token) (interface{}, error) {
-			return []byte(web.SaltKey), nil
+			return ijwt.AtKey, nil
 		})
 		if err != nil {
 			ctx.AbortWithStatus(http.StatusUnauthorized)
 			return
 		}
 		if token == nil || !token.Valid || claims.UserId == 0 {
+			ctx.AbortWithStatus(http.StatusUnauthorized)
+			return
+		}
+
+		if claims.UserAgent != ctx.Request.UserAgent() {
+			ctx.AbortWithStatus(http.StatusUnauthorized)
+			return
+		}
+
+		err = l.CheckSession(ctx, claims.Ssid)
+		if err != nil {
+			// 要么redis有问题，要么已经退出登录
 			ctx.AbortWithStatus(http.StatusUnauthorized)
 			return
 		}

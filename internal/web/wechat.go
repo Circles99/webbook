@@ -10,26 +10,28 @@ import (
 	"time"
 	"webbook/internal/service"
 	"webbook/internal/service/oauth2/wechat"
+	ijwt "webbook/internal/web/jwt"
 )
 
 type OAuth2WechatHandler struct {
-	svc     wechat.Service
-	userSvc service.UserService
-	JwtHandler
+	svc      wechat.Service
+	userSvc  service.UserService
 	stateKey []byte
 	cfg      WechatConfig
+	ijwt.Handler
 }
 
 type WechatConfig struct {
 	Secure bool
 }
 
-func NewOAuth2WechatHandler(svc wechat.Service, userSvc service.UserService, cfg WechatConfig) *OAuth2WechatHandler {
+func NewOAuth2WechatHandler(svc wechat.Service, userSvc service.UserService, cfg WechatConfig, jwtHdl ijwt.Handler) *OAuth2WechatHandler {
 	return &OAuth2WechatHandler{
 		svc:      svc,
 		userSvc:  userSvc,
 		stateKey: []byte("95osj3fUD7fo0mlYdDbncXz4VD2igyf0"),
 		cfg:      cfg,
+		Handler:  jwtHdl,
 	}
 }
 
@@ -110,7 +112,7 @@ func (h *OAuth2WechatHandler) Callback(ctx *gin.Context) {
 		return
 	}
 	// 从userService 里面拿userId
-	err = h.setJwtToken(ctx, u.Id)
+	err = h.SetLoginToken(ctx, u.Id)
 	if err != nil {
 		ctx.JSON(http.StatusOK, Result{
 			Code: 5,

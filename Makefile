@@ -26,4 +26,6 @@ mock:
 	@mockgen -source=./internal/repository/cache/user.go -destination=./internal/repository/cache/mocks/user_mock.go -package=cachemocks
 	# mock redis
 	@mockgen -package=redismocks -destination=./internal/repository/cache/redismocks/cmdable.mock.go github.com/redis/go-redis/v9 Cmdable
+	# mock jwt
+	@mockgen -source=./internal/web/jwt/redis_jwt.go -destination=./internal/web/jwt/mocks/redis_jwt_mock.go -package=rjmocks
 	@go mod tidy

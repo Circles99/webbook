@@ -14,6 +14,7 @@ import (
 	"webbook/internal/domain"
 	"webbook/internal/service"
 	svcmocks "webbook/internal/service/mocks"
+	ijwt "webbook/internal/web/jwt"
 )
 
 func TestUserHandler_Signup(t *testing.T) {
@@ -75,7 +76,7 @@ func TestUserHandler_Signup(t *testing.T) {
 			defer ctrl.Finish()
 
 			server := gin.Default()
-			h := NewUserHandler(tt.mock(ctrl), nil)
+			h := NewUserHandler(tt.mock(ctrl), nil, nil)
 			h.RegisterRoutes(server)
 
 			req, err := http.NewRequest(http.MethodPost, "/users/signup", bytes.NewBuffer([]byte(tt.reqBody)))
@@ -100,14 +101,14 @@ func TestUserHandler_LogSms(t *testing.T) {
 	var (
 		tests = []struct {
 			name     string
-			mock     func(ctrl *gomock.Controller) (service.UserService, service.CodeService)
+			mock     func(ctrl *gomock.Controller) (service.UserService, service.CodeService, ijwt.Handler)
 			reqBody  string
 			wantCode int
 			wantBody Result
 		}{
 			{
 				name: "登录成功",
-				mock: func(ctrl *gomock.Controller) (service.UserService, service.CodeService) {
+				mock: func(ctrl *gomock.Controller) (service.UserService, service.CodeService, ijwt.Handler) {
 					codeSvc := svcmocks.NewMockCodeService(ctrl)
 					codeSvc.EXPECT().Verify(gomock.Any(), "login", "15211112222", "123456").Return(true, nil)
 
@@ -117,7 +118,7 @@ func TestUserHandler_LogSms(t *testing.T) {
 						Email: "123@qq.com",
 						Phone: "15211112222",
 					}, nil)
-					return usersvc, codeSvc
+					return usersvc, codeSvc, nil
 				},
 				reqBody:  `{"phone":"15211112222", "code":"123456"}`,
 				wantCode: http.StatusOK,
@@ -128,12 +129,12 @@ func TestUserHandler_LogSms(t *testing.T) {
 			},
 			{
 				name: "登录失败，验证码错误",
-				mock: func(ctrl *gomock.Controller) (service.UserService, service.CodeService) {
+				mock: func(ctrl *gomock.Controller) (service.UserService, service.CodeService, ijwt.Handler) {
 					codeSvc := svcmocks.NewMockCodeService(ctrl)
 					codeSvc.EXPECT().Verify(gomock.Any(), "login", "15211112222", "123456").Return(false, nil)
 
 					usersvc := svcmocks.NewMockUserService(ctrl)
-					return usersvc, codeSvc
+					return usersvc, codeSvc, nil
 				},
 				reqBody:  `{"phone":"15211112222", "code":"123456"}`,
 				wantCode: http.StatusOK,
@@ -145,13 +146,13 @@ func TestUserHandler_LogSms(t *testing.T) {
 
 			{
 				name: "登录失败，系统错误",
-				mock: func(ctrl *gomock.Controller) (service.UserService, service.CodeService) {
+				mock: func(ctrl *gomock.Controller) (service.UserService, service.CodeService, ijwt.Handler) {
 					codeSvc := svcmocks.NewMockCodeService(ctrl)
 					codeSvc.EXPECT().Verify(gomock.Any(), "login", "15211112222", "123456").Return(false, errors.New("mock 错误"))
 
 					usersvc := svcmocks.NewMockUserService(ctrl)
 
-					return usersvc, codeSvc
+					return usersvc, codeSvc, nil
 				},
 				reqBody:  `{"phone":"15211112222", "code":"123456"}`,
 				wantCode: http.StatusOK,
