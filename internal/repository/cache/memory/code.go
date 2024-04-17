@@ -17,6 +17,8 @@ func NewMemory() *Memory {
 }
 
 func (m Memory) Set(ctx context.Context, biz, phone, code string) error {
+
+	// 这里需要优化一下，先load获取有无数据，在判断再set
 	m.sMap.Store(m.getKey(biz, phone), code)
 
 	return nil
