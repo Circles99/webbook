@@ -1,13 +1,15 @@
 package ioc
 
 import (
+	"github.com/spf13/viper"
 	"gorm.io/driver/mysql"
 	"gorm.io/gorm"
 	"webbook/internal/repository/dao"
 )
 
 func InitDB() *gorm.DB {
-	db, err := gorm.Open(mysql.Open("root:root@tcp(webook-mysql:3309)/webook"))
+	dsn := viper.GetString("db.mysql.dsn")
+	db, err := gorm.Open(mysql.Open(dsn))
 	if err != nil {
 		panic(err)
 	}
