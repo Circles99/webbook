@@ -7,6 +7,7 @@ import (
 	"net/http"
 	"net/url"
 	"webbook/internal/domain"
+	"webbook/pkg/logger"
 )
 
 var redirectUri = url.PathEscape("https://xxx.xxx1.com/oauth2/wechat/callback")
@@ -25,13 +26,15 @@ type WechatService struct {
 	appId     string
 	appSecret string
 	client    *http.Client
+	l         logger.Logger
 }
 
-func NewWechatService(appId, appSecret string) Service {
+func NewWechatService(appId, appSecret string, l logger.Logger) Service {
 	return &WechatService{
 		appId:     appId,
 		appSecret: appSecret,
 		client:    http.DefaultClient,
+		l:         l,
 	}
 }
 

@@ -6,6 +6,7 @@ import (
 	"golang.org/x/crypto/bcrypt"
 	"webbook/internal/domain"
 	"webbook/internal/repository"
+	"webbook/pkg/logger"
 )
 
 var (
@@ -23,11 +24,12 @@ type UserService interface {
 }
 
 type UserServiceImpl struct {
-	repo repository.UserRepository
+	repo   repository.UserRepository
+	logger logger.Logger
 }
 
-func NewUserService(repo repository.UserRepository) UserService {
-	return &UserServiceImpl{repo: repo}
+func NewUserService(repo repository.UserRepository, l logger.Logger) UserService {
+	return &UserServiceImpl{repo: repo, logger: l}
 }
 
 func (svc *UserServiceImpl) SignUp(ctx context.Context, u domain.User) error {
@@ -77,6 +79,7 @@ func (svc *UserServiceImpl) FindOrCreate(ctx context.Context, phone string) (dom
 		return domain.User{}, err
 	}
 
+	svc.logger.Info("用户未注册", logger.String("phone", phone))
 	err = svc.repo.Create(ctx, domain.User{
 		Phone: phone,
 	})

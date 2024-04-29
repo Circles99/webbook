@@ -1,6 +1,7 @@
 package ioc
 
 import (
+	"context"
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
 	"github.com/redis/go-redis/v9"
@@ -9,6 +10,8 @@ import (
 	"webbook/internal/web"
 	ijwt "webbook/internal/web/jwt"
 	"webbook/internal/web/middleware"
+	logger2 "webbook/pkg/logger"
+	"webbook/pkg/middlewares/logger"
 	mdwratelimit "webbook/pkg/middlewares/ratelimit"
 	"webbook/pkg/ratelimit"
 )
@@ -21,7 +24,7 @@ func InitWebServer(mdls []gin.HandlerFunc, hdl *web.UserHandler, oauth2WechatHdl
 	return server
 }
 
-func InitMiddlewares(redisClient redis.Cmdable, jwtHdl ijwt.Handler) []gin.HandlerFunc {
+func InitMiddlewares(redisClient redis.Cmdable, jwtHdl ijwt.Handler, l logger2.Logger) []gin.HandlerFunc {
 	return []gin.HandlerFunc{
 		corsHdl(),
 		middleware.NewLoginJwtMiddlewareBuilder(jwtHdl).
@@ -34,6 +37,12 @@ func InitMiddlewares(redisClient redis.Cmdable, jwtHdl ijwt.Handler) []gin.Handl
 			IgnorePaths("/oauth2/wechat/callback").
 			Build(),
 		mdwratelimit.NewRedisSlidingWindowLimiter(ratelimit.NewRedisSlidingWindowLimiter(redisClient, time.Second, 100)).Build(),
+		logger.NewMiddlewareBuilder(func(ctx context.Context, al *logger.AccessLog) {
+			l.Debug("Http请求", logger2.Field{
+				Key:   "al",
+				Value: al,
+			})
+		}).AllowReqBody().AllowRespBody().Builder(),
 	}
 }
 
