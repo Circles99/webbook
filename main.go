@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"github.com/fsnotify/fsnotify"
 	_ "github.com/spf13/viper/remote"
+	"go.uber.org/zap"
 
 	"github.com/spf13/pflag"
 	"github.com/spf13/viper"
@@ -11,6 +12,7 @@ import (
 
 func main() {
 	InitViperV1()
+	initLogger()
 	server := InitWebServer()
 	err := server.Run(":8080")
 	if err != nil {
@@ -18,12 +20,21 @@ func main() {
 	}
 }
 
+func initLogger() {
+	logger, err := zap.NewDevelopment()
+	if err != nil {
+		panic(err)
+	}
+	// 如果不Replace, 直接用 zap.L(), 什么都打不出来
+	zap.ReplaceGlobals(logger)
+}
+
 func initViperRemote() {
 	// etcdctl --endpoints=127.0.0.1:12379 put /webook "$(dev.yaml)"
 	viper.SetConfigType("ymal")
 	err := viper.AddRemoteProvider("etcd3",
 		// 通过webook和其他使用etcd的区别出来
-		"127.0.0.1:12379", "/webool")
+		"127.0.0.1:12379", "/webook")
 	if err != nil {
 		panic(err)
 	}
