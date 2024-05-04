@@ -42,7 +42,7 @@ func (svc *UserServiceImpl) SignUp(ctx context.Context, u domain.User) error {
 
 func (svc *UserServiceImpl) Login(ctx context.Context, email, password string) (domain.User, error) {
 	u, err := svc.repo.FindByEmail(ctx, email)
-	if err == repository.ErrUserNotFound {
+	if errors.Is(err, repository.ErrUserNotFound) {
 		return domain.User{}, ErrInvalidEmailOrPassword
 	}
 	if err != nil {
