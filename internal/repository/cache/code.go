@@ -6,7 +6,7 @@ import (
 	"errors"
 	"fmt"
 	"github.com/redis/go-redis/v9"
-	"go.uber.org/zap"
+	"webbook/pkg/logger"
 )
 
 var (
@@ -28,10 +28,11 @@ type CodeCache interface {
 
 type RedisCodeCache struct {
 	client redis.Cmdable
+	l      logger.Logger
 }
 
-func NewCodeCache(client redis.Cmdable) CodeCache {
-	return &RedisCodeCache{client: client}
+func NewCodeCache(client redis.Cmdable, l logger.Logger) CodeCache {
+	return &RedisCodeCache{client: client, l: l}
 }
 
 func (c *RedisCodeCache) Set(ctx context.Context, biz, phone, code string) error {
@@ -45,7 +46,7 @@ func (c *RedisCodeCache) Set(ctx context.Context, biz, phone, code string) error
 		return nil
 	case -1:
 		// 发送频繁
-		zap.L().Warn("短信发送太频繁", zap.String("biz", biz))
+		c.l.Warn("短信发送太频繁", logger.String("biz", biz))
 		// 需要在对应的告警系统中配置,比如说规则，一分钟内出现100次，就warn 告警
 		return ErrSetCodeTooMany
 	default:

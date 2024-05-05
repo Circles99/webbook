@@ -6,8 +6,3 @@ type Logger interface {
 	Warn(msg string, args ...Field)
 	Error(msg string, args ...Field)
 }
-
-type Field struct {
-	Key   string
-	Value any
-}

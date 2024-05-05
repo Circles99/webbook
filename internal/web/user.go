@@ -6,11 +6,11 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/golang-jwt/jwt/v5"
 	"github.com/redis/go-redis/v9"
-	"go.uber.org/zap"
 	"net/http"
 	"webbook/internal/domain"
 	"webbook/internal/service"
 	ijwt "webbook/internal/web/jwt"
+	"webbook/pkg/logger"
 )
 
 const (
@@ -23,6 +23,7 @@ type UserHandler struct {
 	emailExp    *regexp.Regexp
 	passwordExp *regexp.Regexp
 	cmd         redis.Cmdable
+	logger      logger.Logger
 	ijwt.Handler
 }
 
@@ -38,7 +39,7 @@ func (u UserHandler) RegisterRoutes(server *gin.Engine) {
 
 }
 
-func NewUserHandler(svc service.UserService, codeSvc service.CodeService, jwtHdl ijwt.Handler) *UserHandler {
+func NewUserHandler(svc service.UserService, codeSvc service.CodeService, l logger.Logger, jwtHdl ijwt.Handler) *UserHandler {
 	const (
 		emailRegexPattern    = `^\w+([-+.]\\w+)*@\w+([-.]\\w+)*\.\w+([-.]\w+)*$`
 		passwordRegexPattern = `^(?=.*[A-Za-z])(?=.*\d)(?=.*[$@$!%*#?&])[A-Za-z\d$@$!%*#?&]{8,}$`
@@ -140,7 +141,7 @@ func (u *UserHandler) LoginSms(ctx *gin.Context) {
 			Code: 5,
 			Msg:  "系统错误",
 		})
-		zap.L().Error("校验验证码出错", zap.Error(err))
+		u.logger.Error("校验验证码出错", logger.Error(err))
 		return
 	}
 
