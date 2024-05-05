@@ -16,11 +16,12 @@ import (
 	"webbook/pkg/ratelimit"
 )
 
-func InitWebServer(mdls []gin.HandlerFunc, hdl *web.UserHandler, oauth2WechatHdl *web.OAuth2WechatHandler) *gin.Engine {
+func InitWebServer(mdls []gin.HandlerFunc, hdl *web.UserHandler, oauth2WechatHdl *web.OAuth2WechatHandler, articleHdl *web.ArticleHandler) *gin.Engine {
 	server := gin.Default()
 	server.Use(mdls...)
 	hdl.RegisterRoutes(server)
 	oauth2WechatHdl.RegisterRoutes(server)
+	articleHdl.RegisterRoutes(server)
 	return server
 }
 

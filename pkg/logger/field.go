@@ -14,6 +14,7 @@ func String(key string, val any) Field {
 
 func Error(val error) Field {
 	return Field{
+		Key:   "error",
 		Value: val,
 	}
 }

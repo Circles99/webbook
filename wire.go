@@ -19,14 +19,15 @@ func InitWebServer() *gin.Engine {
 		// 最基础的第三方服务
 		ioc.InitDB, ioc.InitRedis, ioc.InitSms, ioc.InitLogger,
 		// dao, cache
-		dao.NewUserDao, cache.NewUserCache, cache.NewCodeCache,
+		dao.NewUserDao, cache.NewUserCache, cache.NewCodeCache, dao.NewArticleDao,
 		// repository
 		repository.NewUserRepository, repository.NewCodeRepository,
 		// service.go
-		service.NewUserService, service.NewCodeService,
+		service.NewUserService, service.NewCodeService, service.NewArticleService, repository.NewArticleRepository,
 		// web
 		web.NewUserHandler,
 		web.NewOAuth2WechatHandler,
+		web.NewArticleHandler,
 
 		// jwt
 		jwt.NewRedisJwtHandler,

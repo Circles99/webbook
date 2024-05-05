@@ -8,6 +8,7 @@ package integration
 
 import (
 	"github.com/gin-gonic/gin"
+	"github.com/google/wire"
 	"webbook/internal/repository"
 	"webbook/internal/repository/cache"
 	"webbook/internal/repository/dao"
@@ -22,20 +23,39 @@ import (
 func InitWebServer() *gin.Engine {
 	cmdable := ioc.InitRedis()
 	handler := jwt.NewRedisJwtHandler(cmdable)
-	v := ioc.InitMiddlewares(cmdable, handler)
-	db := ioc.InitDB()
+	logger := ioc.InitLogger()
+	v := ioc.InitMiddlewares(cmdable, handler, logger)
+	db := ioc.InitDB(logger)
 	userDao := dao.NewUserDao(db)
 	userCache := cache.NewUserCache(cmdable)
 	userRepository := repository.NewUserRepository(userDao, userCache)
-	userService := service.NewUserService(userRepository)
-	codeCache := cache.NewCodeCache(cmdable)
+	userService := service.NewUserService(userRepository, logger)
+	codeCache := cache.NewCodeCache(cmdable, logger)
 	codeRepository := repository.NewCodeRepository(codeCache)
 	smsService := ioc.InitSms()
 	codeService := service.NewCodeService(codeRepository, smsService)
-	userHandler := web.NewUserHandler(userService, codeService, handler)
-	wechatService := ioc.InitOAuth2WechatService()
+	userHandler := web.NewUserHandler(userService, codeService, logger, handler)
+	wechatService := ioc.InitOAuth2WechatService(logger)
 	wechatConfig := ioc.NewWechatHandlerConfig()
 	oAuth2WechatHandler := web.NewOAuth2WechatHandler(wechatService, userService, wechatConfig, handler)
-	engine := ioc.InitWebServer(v, userHandler, oAuth2WechatHandler)
+	articleDAO := dao.NewArticleDao(db)
+	articleRepository := repository.NewArticleRepository(articleDAO)
+	articleService := service.NewArticleService(articleRepository)
+	articleHandler := web.NewArticleHandler(articleService, logger)
+	engine := ioc.InitWebServer(v, userHandler, oAuth2WechatHandler, articleHandler)
 	return engine
 }
+
+func InitArticleHandler() *web.ArticleHandler {
+	logger := ioc.InitLogger()
+	db := ioc.InitDB(logger)
+	articleDAO := dao.NewArticleDao(db)
+	articleRepository := repository.NewArticleRepository(articleDAO)
+	articleService := service.NewArticleService(articleRepository)
+	articleHandler := web.NewArticleHandler(articleService, logger)
+	return articleHandler
+}
+
+// wire.go:
+
+var thirdProvider = wire.NewSet(ioc.InitDB, ioc.InitRedis, ioc.InitLogger)

@@ -19,14 +19,15 @@ func InitWebServer() *gin.Engine {
 		// 最基础的第三方服务
 		ioc.InitDB, ioc.InitRedis, ioc.InitSms, ioc.InitLogger,
 		// dao, cache
-		dao.NewUserDao, cache.NewUserCache, cache.NewCodeCache,
+		dao.NewUserDao, cache.NewUserCache, cache.NewCodeCache, dao.NewArticleDao,
 		// repository
-		repository.NewUserRepository, repository.NewCodeRepository,
+		repository.NewUserRepository, repository.NewCodeRepository, repository.NewArticleRepository,
 		// service.go
-		service.NewUserService, service.NewCodeService,
+		service.NewUserService, service.NewCodeService, service.NewArticleService,
 		// web
 		web.NewUserHandler,
 		web.NewOAuth2WechatHandler,
+		web.NewArticleHandler,
 
 		// jwt
 		jwt.NewRedisJwtHandler,
@@ -38,4 +39,11 @@ func InitWebServer() *gin.Engine {
 		ioc.NewWechatHandlerConfig,
 	)
 	return new(gin.Engine)
+}
+
+var thirdProvider = wire.NewSet(ioc.InitDB, ioc.InitRedis, ioc.InitLogger)
+
+func InitArticleHandler() *web.ArticleHandler {
+	wire.Build(thirdProvider, service.NewArticleService, web.NewArticleHandler, repository.NewArticleRepository, dao.NewArticleDao)
+	return &web.ArticleHandler{}
 }
