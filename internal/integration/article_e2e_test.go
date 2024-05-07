@@ -90,6 +90,38 @@ func (s *ArticleTestSuite) TestEdit() {
 				Data: 1,
 			},
 		},
+		{
+			name: "修改已有帖子，并保存",
+			before: func(t *testing.T) {
+				err := s.db.Create(dao.Article{Id: 2, Title: "我的标题", Content: "我的内容", AuthorId: 123, Created: 123, Updated: 234}).Error
+				assert.NoError(t, err)
+			},
+			after: func(t *testing.T) {
+				var art dao.Article
+				err := s.db.Where("id=?", 1).First(&art).Error
+				assert.NoError(t, err)
+				assert.True(t, art.Updated > 234)
+
+				art.Updated = 0
+				assert.Equal(t, dao.Article{
+					Created:  123,
+					Id:       2,
+					Title:    "新的标题",
+					Content:  "新的内容",
+					AuthorId: 123,
+				}, art)
+			},
+			art: Article{
+				Id:      2,
+				Title:   "新的标题",
+				Content: "新的内容",
+			},
+			wantCode: http.StatusOK,
+			wantRes: Result[int64]{
+				Msg:  "OK",
+				Data: 2,
+			},
+		},
 	}
 
 	for _, tc := range testCases {
@@ -134,8 +166,9 @@ func TestArticle(t *testing.T) {
 }
 
 type Article struct {
-	Title   string
-	Content string
+	Id      int64  `json:"id"`
+	Title   string `json:"title"`
+	Content string `json:"content"`
 }
 
 type Result[T any] struct {

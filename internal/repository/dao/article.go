@@ -8,6 +8,7 @@ import (
 
 type ArticleDAO interface {
 	Insert(ctx context.Context, art Article) (int64, error)
+	Update(ctx context.Context, art Article) error
 }
 
 type GORMArticleDao struct {
@@ -26,6 +27,17 @@ func (dao *GORMArticleDao) Insert(ctx context.Context, art Article) (int64, erro
 	art.Updated = now
 	err := dao.db.WithContext(ctx).Create(&art).Error
 	return art.Id, err
+}
+
+func (dao *GORMArticleDao) Update(ctx context.Context, art Article) error {
+	now := time.Now().UnixMilli()
+	art.Updated = now
+	err := dao.db.WithContext(ctx).Model(&art).Where("id=?", art.Id).Updates(map[string]any{
+		"title":   art.Title,
+		"content": art.Content,
+		"updated": art.Updated,
+	}).Error
+	return err
 }
 
 // Article 制作库的

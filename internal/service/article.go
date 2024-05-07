@@ -21,5 +21,14 @@ func NewArticleService(repo repository.ArticleRepository) ArticleService {
 }
 
 func (a *ArticleServiceImpl) Save(ctx context.Context, art domain.Article) (int64, error) {
+
+	if art.Id > 0 {
+		err := a.repo.Update(ctx, art)
+		if err != nil {
+			return 0, err
+		}
+		return art.Id, nil
+	}
+
 	return a.repo.Create(ctx, art)
 }
