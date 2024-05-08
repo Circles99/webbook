@@ -26,6 +26,7 @@ func NewArticleHandler(svc service.ArticleService, l logger.Logger) *ArticleHand
 func (a *ArticleHandler) RegisterRoutes(server *gin.Engine) {
 	g := server.Group("/articles")
 	g.POST("/edit", a.Edit)
+	g.POST("/publish", a.Publish)
 }
 
 func (a *ArticleHandler) Edit(ctx *gin.Context) {
@@ -74,5 +75,9 @@ func (a *ArticleHandler) Edit(ctx *gin.Context) {
 		Msg:  "OK",
 		Data: id,
 	})
+
+}
+
+func (a *ArticleHandler) Publish(ctx *gin.Context) {
 
 }

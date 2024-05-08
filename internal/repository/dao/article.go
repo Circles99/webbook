@@ -2,6 +2,7 @@ package dao
 
 import (
 	"context"
+	"errors"
 	"gorm.io/gorm"
 	"time"
 )
@@ -32,13 +33,22 @@ func (dao *GORMArticleDao) Insert(ctx context.Context, art Article) (int64, erro
 func (dao *GORMArticleDao) Update(ctx context.Context, art Article) error {
 	now := time.Now().UnixMilli()
 	art.Updated = now
-	err := dao.db.WithContext(ctx).Model(&art).Where("id=? AND author_id = ?", art.Id, art.AuthorId).
+	res := dao.db.WithContext(ctx).Model(&art).Where("id=? AND author_id = ?", art.Id, art.AuthorId).
 		Updates(map[string]any{
 			"title":   art.Title,
 			"content": art.Content,
 			"updated": art.Updated,
-		}).Error
-	return err
+		})
+
+	if res.Error != nil {
+		return res.Error
+	}
+
+	if res.RowsAffected == 0 {
+		return errors.New("更新失败")
+	}
+
+	return nil
 }
 
 // Article 制作库的
