@@ -122,6 +122,37 @@ func (s *ArticleTestSuite) TestEdit() {
 				Data: 2,
 			},
 		},
+		{
+			name: "修改别人的帖子",
+			before: func(t *testing.T) {
+				err := s.db.Create(dao.Article{Id: 2, Title: "我的标题", Content: "我的内容", AuthorId: 789, Created: 123, Updated: 234}).Error
+				assert.NoError(t, err)
+			},
+			after: func(t *testing.T) {
+				var art dao.Article
+				err := s.db.Where("id=?", 1).First(&art).Error
+				assert.NoError(t, err)
+
+				assert.Equal(t, dao.Article{
+					Created:  123,
+					Id:       3,
+					Title:    "新的标题",
+					Content:  "新的内容",
+					Updated:  234,
+					AuthorId: 789,
+				}, art)
+			},
+			art: Article{
+				Id:      3,
+				Title:   "新的标题",
+				Content: "新的内容",
+			},
+			wantCode: http.StatusOK,
+			wantRes: Result[int64]{
+				Msg:  "OK",
+				Data: 3,
+			},
+		},
 	}
 
 	for _, tc := range testCases {
