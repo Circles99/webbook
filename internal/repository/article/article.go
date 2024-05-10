@@ -1,4 +1,4 @@
-package repository
+package article
 
 import (
 	"context"
@@ -7,7 +7,7 @@ import (
 )
 
 type ArticleRepository interface {
-	Create(ctx context.Context, art domain.Article) (int64, error)
+	Save(ctx context.Context, art domain.Article) (int64, error)
 	Update(ctx context.Context, art domain.Article) error
 }
 
@@ -21,7 +21,7 @@ func NewArticleRepository(dao dao.ArticleDAO) ArticleRepository {
 	}
 }
 
-func (a *ArticleRepositoryImpl) Create(ctx context.Context, art domain.Article) (int64, error) {
+func (a *ArticleRepositoryImpl) Save(ctx context.Context, art domain.Article) (int64, error) {
 	return a.dao.Insert(ctx, dao.Article{
 		Title:    art.Title,
 		Content:  art.Content,

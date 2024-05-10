@@ -6,6 +6,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/google/wire"
 	"webbook/internal/repository"
+	"webbook/internal/repository/article"
 	"webbook/internal/repository/cache"
 	"webbook/internal/repository/dao"
 	"webbook/internal/service"
@@ -23,7 +24,7 @@ func InitWebServer() *gin.Engine {
 		// repository
 		repository.NewUserRepository, repository.NewCodeRepository,
 		// service.go
-		service.NewUserService, service.NewCodeService, service.NewArticleService, repository.NewArticleRepository,
+		service.NewUserService, service.NewCodeService, service.NewArticleService, article.NewArticleRepository,
 		// web
 		web.NewUserHandler,
 		web.NewOAuth2WechatHandler,

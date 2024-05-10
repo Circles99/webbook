@@ -10,6 +10,7 @@ import (
 	"webbook/internal/domain"
 	"webbook/internal/repository"
 	repmocks "webbook/internal/repository/mocks"
+	"webbook/pkg/logger"
 )
 
 func TestUserServiceImpl_Login(t *testing.T) {
@@ -102,7 +103,7 @@ func TestUserServiceImpl_Login(t *testing.T) {
 			ctrl := gomock.NewController(t)
 			defer ctrl.Finish()
 
-			svc := NewUserService(tc.mock(ctrl))
+			svc := NewUserService(tc.mock(ctrl), &logger.ZapLogger{})
 
 			user, err := svc.Login(tc.ctx, tc.email, tc.password)
 			assert.Equal(t, tc.wantErr, err)

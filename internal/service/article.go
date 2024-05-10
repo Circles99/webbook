@@ -3,32 +3,69 @@ package service
 import (
 	"context"
 	"webbook/internal/domain"
-	"webbook/internal/repository"
+	"webbook/internal/repository/article"
+	"webbook/pkg/logger"
 )
 
 type ArticleService interface {
 	Save(ctx context.Context, art domain.Article) (int64, error)
+	Publish(ctx context.Context, art domain.Article) (int64, error)
 }
 
 type ArticleServiceImpl struct {
-	repo repository.ArticleRepository
+	repo article.ArticleRepository
+
+	authRepo   article.ArticleAuthorRepository
+	readerRepo article.ArticleReaderRepository
+	l          logger.Logger
 }
 
-func NewArticleService(repo repository.ArticleRepository) ArticleService {
+func NewArticleService(authRepo article.ArticleAuthorRepository, readerRepo article.ArticleReaderRepository, l logger.Logger) ArticleService {
 	return &ArticleServiceImpl{
-		repo: repo,
+		authRepo:   authRepo,
+		readerRepo: readerRepo,
+		l:          l,
 	}
 }
 
 func (a *ArticleServiceImpl) Save(ctx context.Context, art domain.Article) (int64, error) {
 
+	var (
+		id  = art.Id
+		err error
+	)
+
 	if art.Id > 0 {
-		err := a.repo.Update(ctx, art)
-		if err != nil {
-			return 0, err
+		err = a.repo.Update(ctx, art)
+
+	} else {
+		id, err = a.authRepo.Create(ctx, art)
+	}
+	if err != nil {
+		return 0, err
+	}
+	art.Id = id
+
+	for i := 0; i < 3; i++ {
+		id, err = a.repo.Save(ctx, art)
+		if err == nil {
+			break
 		}
-		return art.Id, nil
+		a.l.Error("部分失败,保存到线上库失败", logger.Int64("art_id", art.Id), logger.Error(err))
 	}
 
-	return a.repo.Create(ctx, art)
+	if err != nil {
+		a.l.Error("部分失败,重试彻底失败 ", logger.Int64("art_id", art.Id), logger.Error(err))
+	}
+
+	return id, err
+}
+
+func (a *ArticleServiceImpl) Publish(ctx context.Context, art domain.Article) (int64, error) {
+	id, err := a.authRepo.Create(ctx, art)
+	if err != nil {
+		return 0, err
+	}
+	art.Id = id
+	return a.readerRepo.Save(ctx, art)
 }
