@@ -12,7 +12,7 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"testing"
-	"webbook/internal/repository/dao"
+	"webbook/internal/repository/dao/article"
 	ijwt "webbook/internal/web/jwt"
 	"webbook/ioc"
 )
@@ -66,14 +66,14 @@ func (s *ArticleTestSuite) TestEdit() {
 
 			},
 			after: func(t *testing.T) {
-				var art dao.Article
+				var art article.Article
 				err := s.db.Where("id=?", 1).First(&art).Error
 				assert.NoError(t, err)
 				assert.True(t, art.Created > 0)
 				assert.True(t, art.Updated > 0)
 				art.Created = 0
 				art.Updated = 0
-				assert.Equal(t, dao.Article{
+				assert.Equal(t, article.Article{
 					Id:       1,
 					Title:    "我的标题",
 					Content:  "我的内容",
@@ -93,17 +93,17 @@ func (s *ArticleTestSuite) TestEdit() {
 		{
 			name: "修改已有帖子，并保存",
 			before: func(t *testing.T) {
-				err := s.db.Create(dao.Article{Id: 2, Title: "我的标题", Content: "我的内容", AuthorId: 123, Created: 123, Updated: 234}).Error
+				err := s.db.Create(article.Article{Id: 2, Title: "我的标题", Content: "我的内容", AuthorId: 123, Created: 123, Updated: 234}).Error
 				assert.NoError(t, err)
 			},
 			after: func(t *testing.T) {
-				var art dao.Article
+				var art article.Article
 				err := s.db.Where("id=?", 1).First(&art).Error
 				assert.NoError(t, err)
 				assert.True(t, art.Updated > 234)
 
 				art.Updated = 0
-				assert.Equal(t, dao.Article{
+				assert.Equal(t, article.Article{
 					Created:  123,
 					Id:       2,
 					Title:    "新的标题",
@@ -125,15 +125,15 @@ func (s *ArticleTestSuite) TestEdit() {
 		{
 			name: "修改别人的帖子",
 			before: func(t *testing.T) {
-				err := s.db.Create(dao.Article{Id: 2, Title: "我的标题", Content: "我的内容", AuthorId: 789, Created: 123, Updated: 234}).Error
+				err := s.db.Create(article.Article{Id: 2, Title: "我的标题", Content: "我的内容", AuthorId: 789, Created: 123, Updated: 234}).Error
 				assert.NoError(t, err)
 			},
 			after: func(t *testing.T) {
-				var art dao.Article
+				var art article.Article
 				err := s.db.Where("id=?", 1).First(&art).Error
 				assert.NoError(t, err)
 
-				assert.Equal(t, dao.Article{
+				assert.Equal(t, article.Article{
 					Created:  123,
 					Id:       3,
 					Title:    "新的标题",

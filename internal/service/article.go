@@ -15,6 +15,7 @@ type ArticleService interface {
 type ArticleServiceImpl struct {
 	repo article.ArticleRepository
 
+	// v1 操作两个repository
 	authRepo   article.ArticleAuthorRepository
 	readerRepo article.ArticleReaderRepository
 	l          logger.Logger

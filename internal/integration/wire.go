@@ -9,6 +9,7 @@ import (
 	"webbook/internal/repository/article"
 	"webbook/internal/repository/cache"
 	"webbook/internal/repository/dao"
+	article2 "webbook/internal/repository/dao/article"
 	"webbook/internal/service"
 	"webbook/internal/web"
 	"webbook/internal/web/jwt"
@@ -20,7 +21,7 @@ func InitWebServer() *gin.Engine {
 		// 最基础的第三方服务
 		ioc.InitDB, ioc.InitRedis, ioc.InitSms, ioc.InitLogger,
 		// dao, cache
-		dao.NewUserDao, cache.NewUserCache, cache.NewCodeCache, dao.NewArticleDao,
+		dao.NewUserDao, cache.NewUserCache, cache.NewCodeCache, article2.NewArticleDao,
 		// repository
 		repository.NewUserRepository, repository.NewCodeRepository, article.NewArticleRepository,
 		// service.go
@@ -45,6 +46,6 @@ func InitWebServer() *gin.Engine {
 var thirdProvider = wire.NewSet(ioc.InitDB, ioc.InitRedis, ioc.InitLogger)
 
 func InitArticleHandler() *web.ArticleHandler {
-	wire.Build(thirdProvider, service.NewArticleService, web.NewArticleHandler, article.NewArticleRepository, dao.NewArticleDao)
+	wire.Build(thirdProvider, service.NewArticleService, web.NewArticleHandler, article.NewArticleRepository, article2.NewArticleDao)
 	return &web.ArticleHandler{}
 }
