@@ -31,13 +31,23 @@ func NewArticleService(authRepo article.ArticleAuthorRepository, readerRepo arti
 
 func (a *ArticleServiceImpl) Save(ctx context.Context, art domain.Article) (int64, error) {
 
+	art.Status = domain.ArticleStatusPublished
+	if art.Id > 0 {
+		err := a.repo.Update(ctx, art)
+		return art.Id, err
+	}
+	return a.repo.Save(ctx, art)
+}
+
+func (a *ArticleServiceImpl) SaveV1(ctx context.Context, art domain.Article) (int64, error) {
+
 	var (
 		id  = art.Id
 		err error
 	)
 
 	if art.Id > 0 {
-		err = a.repo.Update(ctx, art)
+		err = a.authRepo.Update(ctx, art)
 
 	} else {
 		id, err = a.authRepo.Create(ctx, art)
@@ -48,7 +58,7 @@ func (a *ArticleServiceImpl) Save(ctx context.Context, art domain.Article) (int6
 	art.Id = id
 
 	for i := 0; i < 3; i++ {
-		id, err = a.repo.Save(ctx, art)
+		id, err = a.readerRepo.Save(ctx, art)
 		if err == nil {
 			break
 		}
@@ -63,6 +73,13 @@ func (a *ArticleServiceImpl) Save(ctx context.Context, art domain.Article) (int6
 }
 
 func (a *ArticleServiceImpl) Publish(ctx context.Context, art domain.Article) (int64, error) {
+
+	art.Status = domain.ArticleStatusPublished
+
+	return a.repo.Sync(ctx, art)
+}
+
+func (a *ArticleServiceImpl) PublishV1(ctx context.Context, art domain.Article) (int64, error) {
 	id, err := a.authRepo.Create(ctx, art)
 	if err != nil {
 		return 0, err

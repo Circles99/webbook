@@ -36,6 +36,7 @@ func (dao *GORMArticleDao) Upsert(ctx context.Context, art PublishArticle) error
 			"title":   art.Title,
 			"content": art.Content,
 			"updated": art.Updated,
+			"status":  art.Status,
 		}),
 	}).Create(&art).Error
 	return err
@@ -81,6 +82,7 @@ func (dao *GORMArticleDao) Update(ctx context.Context, art Article) error {
 		Updates(map[string]any{
 			"title":   art.Title,
 			"content": art.Content,
+			"status":  art.Status,
 			"updated": art.Updated,
 		})
 
@@ -101,6 +103,8 @@ type Article struct {
 	Title    string `gorm:"type=varchar(1024)"`
 	Content  string `gorm:"type=BLOB"`
 	AuthorId int64  `gorm:"index"`
+
+	Status uint8
 
 	//AuthorId int64  `gorm:"index=aid_ctime"`
 	//Created  int64  `gorm:"index=aid_ctime"`

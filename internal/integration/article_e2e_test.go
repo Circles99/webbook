@@ -12,6 +12,7 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"testing"
+	"webbook/internal/domain"
 	"webbook/internal/repository/dao/article"
 	ijwt "webbook/internal/web/jwt"
 	"webbook/ioc"
@@ -78,6 +79,7 @@ func (s *ArticleTestSuite) TestEdit() {
 					Title:    "我的标题",
 					Content:  "我的内容",
 					AuthorId: 123,
+					Status:   domain.ArticleStatusUnpublished.ToUint8(),
 				}, art)
 			},
 			art: Article{
@@ -98,7 +100,7 @@ func (s *ArticleTestSuite) TestEdit() {
 			},
 			after: func(t *testing.T) {
 				var art article.Article
-				err := s.db.Where("id=?", 1).First(&art).Error
+				err := s.db.Where("id=?").First(&art).Error
 				assert.NoError(t, err)
 				assert.True(t, art.Updated > 234)
 
@@ -109,6 +111,7 @@ func (s *ArticleTestSuite) TestEdit() {
 					Title:    "新的标题",
 					Content:  "新的内容",
 					AuthorId: 123,
+					Status:   domain.ArticleStatusUnpublished.ToUint8(),
 				}, art)
 			},
 			art: Article{
@@ -130,7 +133,7 @@ func (s *ArticleTestSuite) TestEdit() {
 			},
 			after: func(t *testing.T) {
 				var art article.Article
-				err := s.db.Where("id=?", 1).First(&art).Error
+				err := s.db.Where("id=?", 2).First(&art).Error
 				assert.NoError(t, err)
 
 				assert.Equal(t, article.Article{
