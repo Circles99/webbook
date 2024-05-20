@@ -13,6 +13,7 @@ type ArticleDAO interface {
 	Update(ctx context.Context, art Article) error
 	Sync(ctx context.Context, art Article) (int64, error)
 	Upsert(ctx context.Context, art PublishArticle) error
+	SyncStatus(ctx context.Context, id int64, authorId int64, status uint8) error
 }
 
 type GORMArticleDao struct {
@@ -23,6 +24,37 @@ func NewArticleDao(db *gorm.DB) ArticleDAO {
 	return &GORMArticleDao{
 		db: db,
 	}
+}
+
+func (dao *GORMArticleDao) SyncStatus(ctx context.Context, id int64, authorId int64, status uint8) error {
+	now := time.Now().UnixMilli()
+
+	return dao.db.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
+		res := tx.Model(&Article{}).Where("id = ? AND author_id = ?", id, authorId).Updates(map[string]any{
+			"status":  status,
+			"updated": now,
+		})
+		if res.Error != nil {
+			return res.Error
+		}
+
+		if res.RowsAffected == 0 {
+			return errors.New("更新失败")
+		}
+
+		return tx.Model(&PublishArticle{}).Where("id = ?", id).Updates(map[string]any{
+			"status":  status,
+			"updated": now,
+		}).Error
+	})
+
+}
+
+func (dao *GORMArticleDao) Transaction(ctx context.Context, bizFunc func(txDao ArticleDAO) error) error {
+	return dao.db.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
+		txDao := NewArticleDao(tx)
+		return bizFunc(txDao)
+	})
 }
 
 func (dao *GORMArticleDao) Upsert(ctx context.Context, art PublishArticle) error {

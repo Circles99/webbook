@@ -11,6 +11,7 @@ type ArticleRepository interface {
 	Update(ctx context.Context, art domain.Article) error
 	// Sync
 	Sync(ctx context.Context, art domain.Article) (int64, error)
+	SyncStatus(ctx context.Context, id, authorId int64, status domain.ArticleStatus) error
 }
 
 type ArticleRepositoryImpl struct {
@@ -25,6 +26,10 @@ func NewArticleRepository(dao article.ArticleDAO) ArticleRepository {
 	return &ArticleRepositoryImpl{
 		dao: dao,
 	}
+}
+
+func (a *ArticleRepositoryImpl) SyncStatus(ctx context.Context, id, authorId int64, status domain.ArticleStatus) error {
+	return a.dao.SyncStatus(ctx, id, authorId, status.ToUint8())
 }
 
 // dao 层面上解决事务问题
