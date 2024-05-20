@@ -23,3 +23,24 @@ services:
 #    用12379端口访问etcd
     ports:
       - "12379:2379"
+
+  mongo:
+    image: mongo:6.0
+    restart: always
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: root
+      MONGO_INITDB_ROOT_PASSWORD: example
+    ports:
+      - 27017:27017
+
+  mongo-express:
+    image: mongo-express:0.54
+    restart: always
+    ports:
+      - 18081:8081
+    environment:
+      ME_CONFIG_MINGODB_ADMINUSERNAME: root
+      ME_CONFIG_MINGODB_ADMINPASSWORD: example
+
+      # 这个url 根据mongo里面的配置弄出来的
+      ME_CONFIG_MINGODB_URL: mongodb://root:example@mongo:27017/
