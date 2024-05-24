@@ -43,9 +43,21 @@ func InitWebServer() *gin.Engine {
 	return new(gin.Engine)
 }
 
-var thirdProvider = wire.NewSet(ioc.InitDB, ioc.InitRedis, ioc.InitLogger)
+var thirdProvider = wire.NewSet(ioc.InitDB, ioc.InitRedis, ioc.InitLogger, InitMongoDB)
 
-func InitArticleHandler() *web.ArticleHandler {
-	wire.Build(thirdProvider, service.NewArticleService, web.NewArticleHandler, article.NewArticleRepository, article2.NewArticleDao)
+func InitArticleHandler(dao article2.ArticleDAO) *web.ArticleHandler {
+	wire.Build(thirdProvider, service.NewArticleService, web.NewArticleHandler, article.NewArticleRepository)
 	return &web.ArticleHandler{}
 }
+
+//func InitArticleHandler(dao article.ArticleDAO) *web.ArticleHandler {
+//	wire.Build(thirdProvider,
+//		userSvcProvider,
+//		interactiveSvcProvider,
+//		cache.NewRedisArticleCache,
+//		//wire.InterfaceValue(new(article.ArticleDAO), dao),
+//		repository.NewArticleRepository,
+//		service.NewArticleService,
+//		web.NewArticleHandler)
+//	return new(web.ArticleHandler)
+//}

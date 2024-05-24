@@ -35,7 +35,7 @@ func (s *ArticleTestSuite) SetupSuite() {
 		})
 	})
 	s.db = ioc.InitDB(ioc.InitLogger())
-	aHdl := InitArticleHandler()
+	aHdl := InitArticleHandler(article.NewArticleDao(s.db))
 	aHdl.RegisterRoutes(s.server)
 }
 
