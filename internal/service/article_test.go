@@ -9,6 +9,7 @@ import (
 	"webbook/internal/domain"
 	"webbook/internal/repository/article"
 	articlerepmocks "webbook/internal/repository/article/mocks"
+	"webbook/ioc"
 )
 
 func TestArticleServiceImpl_Publish(t *testing.T) {
@@ -147,7 +148,7 @@ func TestArticleServiceImpl_Publish(t *testing.T) {
 			ctrl := gomock.NewController(t)
 			defer ctrl.Finish()
 			author, reader := tt.mock(ctrl)
-			svc := NewArticleService(author, reader)
+			svc := NewArticleServiceV1(author, reader, ioc.InitLogger())
 			id, err := svc.Publish(context.Background(), tt.art)
 			assert.Equal(t, tt.wantErr, err)
 			assert.Equal(t, tt.wantId, id)
