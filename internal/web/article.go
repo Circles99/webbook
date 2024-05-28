@@ -3,6 +3,7 @@ package web
 import (
 	"github.com/ecodeclub/ekit/slice"
 	"github.com/gin-gonic/gin"
+	"github.com/spf13/cast"
 	"net/http"
 	"time"
 	"webbook/internal/domain"
@@ -31,7 +32,55 @@ func (a *ArticleHandler) RegisterRoutes(server *gin.Engine) {
 	g.POST("/edit", a.Edit)
 	g.POST("/publish", a.Publish)
 	g.POST("/withdraw", a.Withdraw)
-	g.POST("/list", ginx.WrapBodyAndToken[ListReq, ijwt.UserClaims](a.List))
+	g.GET("/list", ginx.WrapBodyAndToken[ListReq, ijwt.UserClaims](a.List))
+	g.GET("/detail/:id", ginx.WrapToken[ijwt.UserClaims](a.Detail))
+	g.GET("/pubDetail/:id", ginx.WrapToken[ijwt.UserClaims](a.PubDetail))
+}
+
+func (a *ArticleHandler) PubDetail(ctx *gin.Context, uc ijwt.UserClaims) (ginx.Result, error) {
+	id := cast.ToInt64(ctx.Param("id"))
+	res, err := a.svc.PubDetail(ctx, id)
+	if err != nil {
+		return ginx.Result{Code: 5, Msg: "数据错误"}, nil
+	}
+	if res.Author.Id != uc.UserId {
+		return ginx.Result{Code: 5, Msg: "作者错误"}, nil
+	}
+
+	return ginx.Result{Data: ArticleVo{
+		Id:         res.Id,
+		Title:      res.Title,
+		Abstract:   res.Abstract(),
+		Content:    res.Content,
+		AuthorId:   res.Author.Id,
+		AuthorName: res.Author.Name,
+		Status:     res.Status.ToUint8(),
+		Created:    res.Created.Format(time.DateTime),
+		Updated:    res.Updated.Format(time.DateTime),
+	}}, nil
+}
+
+func (a *ArticleHandler) Detail(ctx *gin.Context, uc ijwt.UserClaims) (ginx.Result, error) {
+	id := cast.ToInt64(ctx.Param("id"))
+	res, err := a.svc.Detail(ctx, id)
+	if err != nil {
+		return ginx.Result{Code: 5, Msg: "数据错误"}, nil
+	}
+	if res.Author.Id != uc.UserId {
+		return ginx.Result{Code: 5, Msg: "作者错误"}, nil
+	}
+
+	return ginx.Result{Data: ArticleVo{
+		Id:         res.Id,
+		Title:      res.Title,
+		Abstract:   res.Abstract(),
+		Content:    res.Content,
+		AuthorId:   res.Author.Id,
+		AuthorName: res.Author.Name,
+		Status:     res.Status.ToUint8(),
+		Created:    res.Created.Format(time.DateTime),
+		Updated:    res.Updated.Format(time.DateTime),
+	}}, nil
 }
 
 func (a *ArticleHandler) Withdraw(ctx *gin.Context) {
