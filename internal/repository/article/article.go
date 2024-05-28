@@ -2,6 +2,8 @@ package article
 
 import (
 	"context"
+	"github.com/ecodeclub/ekit/slice"
+	"time"
 	"webbook/internal/domain"
 	"webbook/internal/repository/dao/article"
 )
@@ -12,6 +14,7 @@ type ArticleRepository interface {
 	// Sync
 	Sync(ctx context.Context, art domain.Article) (int64, error)
 	SyncStatus(ctx context.Context, id, authorId int64, status domain.ArticleStatus) error
+	List(ctx context.Context, userId int64, offset int, limit int) ([]domain.Article, error)
 }
 
 type ArticleRepositoryImpl struct {
@@ -25,6 +28,29 @@ type ArticleRepositoryImpl struct {
 func NewArticleRepository(dao article.ArticleDAO) ArticleRepository {
 	return &ArticleRepositoryImpl{
 		dao: dao,
+	}
+}
+
+func (a *ArticleRepositoryImpl) List(ctx context.Context, userId int64, offset int, limit int) ([]domain.Article, error) {
+	res, err := a.dao.GetByAuthor(ctx, userId, offset, limit)
+	if err != nil {
+		return nil, err
+	}
+
+	return slice.Map[article.Article, domain.Article](res, func(idx int, src article.Article) domain.Article {
+		return a.toDomain(src)
+	}), nil
+}
+
+func (a *ArticleRepositoryImpl) toDomain(art article.Article) domain.Article {
+	return domain.Article{
+		Id:      art.Id,
+		Title:   art.Title,
+		Content: art.Content,
+		Author:  domain.Author{Id: art.AuthorId},
+		Status:  domain.ArticleStatus(art.Status),
+		Created: time.UnixMilli(art.Created),
+		Updated: time.UnixMilli(art.Updated),
 	}
 }
 

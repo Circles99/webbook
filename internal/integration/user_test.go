@@ -10,8 +10,8 @@ import (
 	"net/http/httptest"
 	"testing"
 	"time"
-	"webbook/internal/web"
 	"webbook/ioc"
+	"webbook/pkg/ginx"
 )
 
 func TestUserHandler_e2e_SendLoginSMSCode(t *testing.T) {
@@ -25,7 +25,7 @@ func TestUserHandler_e2e_SendLoginSMSCode(t *testing.T) {
 		after    func(t *testing.T)
 		reqBody  string
 		wantCode int
-		wantBody web.Result
+		wantBody ginx.Result
 	}{
 		{
 			name:   "发送成功",
@@ -40,7 +40,7 @@ func TestUserHandler_e2e_SendLoginSMSCode(t *testing.T) {
 			},
 			reqBody:  `{"phone":15212345678}`,
 			wantCode: 200,
-			wantBody: web.Result{Code: 0, Msg: "发送成功"},
+			wantBody: ginx.Result{Code: 0, Msg: "发送成功"},
 		},
 		{
 			name: "发送太频繁",
@@ -60,7 +60,7 @@ func TestUserHandler_e2e_SendLoginSMSCode(t *testing.T) {
 			},
 			reqBody:  `{"phone":15212345678}`,
 			wantCode: 200,
-			wantBody: web.Result{Code: 0, Msg: "发送太频繁，请稍后再试"},
+			wantBody: ginx.Result{Code: 0, Msg: "发送太频繁，请稍后再试"},
 		},
 	}
 
@@ -82,7 +82,7 @@ func TestUserHandler_e2e_SendLoginSMSCode(t *testing.T) {
 				return
 			}
 
-			var webResult web.Result
+			var webResult ginx.Result
 			err = json.NewDecoder(resp.Body).Decode(&webResult)
 			require.NoError(t, err)
 			assert.Equal(t, tc.wantBody, webResult)

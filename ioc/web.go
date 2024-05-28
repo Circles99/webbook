@@ -10,9 +10,9 @@ import (
 	"webbook/internal/web"
 	ijwt "webbook/internal/web/jwt"
 	"webbook/internal/web/middleware"
+	"webbook/pkg/ginx/middlewares/logger"
+	mdwratelimit "webbook/pkg/ginx/middlewares/ratelimit"
 	logger2 "webbook/pkg/logger"
-	"webbook/pkg/middlewares/logger"
-	mdwratelimit "webbook/pkg/middlewares/ratelimit"
 	"webbook/pkg/ratelimit"
 )
 

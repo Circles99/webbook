@@ -1,11 +1,14 @@
 package web
 
 import (
+	"github.com/ecodeclub/ekit/slice"
 	"github.com/gin-gonic/gin"
 	"net/http"
+	"time"
 	"webbook/internal/domain"
 	"webbook/internal/service"
 	ijwt "webbook/internal/web/jwt"
+	"webbook/pkg/ginx"
 	"webbook/pkg/logger"
 )
 
@@ -28,12 +31,7 @@ func (a *ArticleHandler) RegisterRoutes(server *gin.Engine) {
 	g.POST("/edit", a.Edit)
 	g.POST("/publish", a.Publish)
 	g.POST("/withdraw", a.Withdraw)
-}
-
-type ArticleReq struct {
-	Id      int64  `json:"id"`
-	Title   string `json:"title"`
-	Content string `json:"content"`
+	g.POST("/list", ginx.WrapBodyAndToken[ListReq, ijwt.UserClaims](a.List))
 }
 
 func (a *ArticleHandler) Withdraw(ctx *gin.Context) {
@@ -42,7 +40,7 @@ func (a *ArticleHandler) Withdraw(ctx *gin.Context) {
 	}
 	var req Req
 	if err := ctx.Bind(&req); err != nil {
-		ctx.JSON(http.StatusOK, Result{
+		ctx.JSON(http.StatusOK, ginx.Result{
 			Code: 400,
 			Msg:  "参数错误",
 		})
@@ -64,14 +62,14 @@ func (a *ArticleHandler) Withdraw(ctx *gin.Context) {
 	})
 
 	if err != nil {
-		ctx.JSON(http.StatusOK, Result{
+		ctx.JSON(http.StatusOK, ginx.Result{
 			Code: 5,
 			Msg:  "系统错误",
 		})
 		a.l.Error("保存失败", logger.Error(err))
 	}
 
-	ctx.JSON(http.StatusOK, Result{
+	ctx.JSON(http.StatusOK, ginx.Result{
 		Msg: "OK",
 	})
 
@@ -81,7 +79,7 @@ func (a *ArticleHandler) Edit(ctx *gin.Context) {
 
 	var req ArticleReq
 	if err := ctx.Bind(&req); err != nil {
-		ctx.JSON(http.StatusOK, Result{
+		ctx.JSON(http.StatusOK, ginx.Result{
 			Code: 400,
 			Msg:  "参数错误",
 		})
@@ -99,7 +97,7 @@ func (a *ArticleHandler) Edit(ctx *gin.Context) {
 	// 调用service
 	id, err := a.svc.Save(ctx, req.toDomain(claims.UserId))
 	if err != nil {
-		ctx.JSON(http.StatusOK, Result{
+		ctx.JSON(http.StatusOK, ginx.Result{
 			Code: 5,
 			Msg:  "系统错误",
 		})
@@ -107,7 +105,7 @@ func (a *ArticleHandler) Edit(ctx *gin.Context) {
 	}
 	// 返回结果
 
-	ctx.JSON(http.StatusOK, Result{
+	ctx.JSON(http.StatusOK, ginx.Result{
 		Msg:  "OK",
 		Data: id,
 	})
@@ -117,7 +115,7 @@ func (a *ArticleHandler) Edit(ctx *gin.Context) {
 func (a *ArticleHandler) Publish(ctx *gin.Context) {
 	var req ArticleReq
 	if err := ctx.Bind(&req); err != nil {
-		ctx.JSON(http.StatusOK, Result{
+		ctx.JSON(http.StatusOK, ginx.Result{
 			Code: 400,
 			Msg:  "参数错误",
 		})
@@ -135,7 +133,7 @@ func (a *ArticleHandler) Publish(ctx *gin.Context) {
 	// 调用service
 	id, err := a.svc.Publish(ctx, req.toDomain(claims.UserId))
 	if err != nil {
-		ctx.JSON(http.StatusOK, Result{
+		ctx.JSON(http.StatusOK, ginx.Result{
 			Code: 5,
 			Msg:  "系统错误",
 		})
@@ -143,10 +141,34 @@ func (a *ArticleHandler) Publish(ctx *gin.Context) {
 	}
 	// 返回结果
 
-	ctx.JSON(http.StatusOK, Result{
+	ctx.JSON(http.StatusOK, ginx.Result{
 		Msg:  "OK",
 		Data: id,
 	})
+
+}
+
+func (a *ArticleHandler) List(ctx *gin.Context, req ListReq, uc ijwt.UserClaims) (ginx.Result, error) {
+	res, err := a.svc.List(ctx, uc.UserId, req.Offset, req.Limit)
+	if err != nil {
+		return ginx.Result{Code: 5, Msg: "系统错误"}, nil
+	}
+	return ginx.Result{
+		Code: 2,
+		Msg:  "",
+		Data: slice.Map[domain.Article, ArticleVo](res, func(idx int, src domain.Article) ArticleVo {
+			return ArticleVo{
+				Id:       src.Id,
+				Title:    src.Title,
+				Abstract: src.Abstract(),
+				//AuthorId:   src.Author.Id,
+				//AuthorName: src.Author.Name,
+				Status:  src.Status.ToUint8(),
+				Created: src.Created.Format(time.DateTime),
+				Updated: src.Updated.Format(time.DateTime),
+			}
+		}),
+	}, nil
 
 }
 

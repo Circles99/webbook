@@ -18,6 +18,17 @@ func NewArticleDao(db *gorm.DB) ArticleDAO {
 	}
 }
 
+func (dao *GORMArticleDao) GetByAuthor(ctx context.Context, userId int64, offset int, limit int) ([]Article, error) {
+	var arts []Article
+	err := dao.db.WithContext(ctx).Model(&Article{}).
+		Where("author_id = ?", userId).
+		Offset(offset).
+		Limit(limit).
+		Order("created DESC").
+		Find(&arts).Error
+	return arts, err
+}
+
 func (dao *GORMArticleDao) SyncStatus(ctx context.Context, id int64, authorId int64, status uint8) error {
 	now := time.Now().UnixMilli()
 

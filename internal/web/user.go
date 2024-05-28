@@ -10,6 +10,7 @@ import (
 	"webbook/internal/domain"
 	"webbook/internal/service"
 	ijwt "webbook/internal/web/jwt"
+	"webbook/pkg/ginx"
 	"webbook/pkg/logger"
 )
 
@@ -71,22 +72,22 @@ func (u *UserHandler) SendLoginSMSCode(ctx *gin.Context) {
 
 	switch err {
 	case nil:
-		ctx.JSON(http.StatusOK, Result{
+		ctx.JSON(http.StatusOK, ginx.Result{
 			Msg: "发送成功",
 		})
 	case service.ErrSetCodeTooMany:
-		ctx.JSON(http.StatusOK, Result{
+		ctx.JSON(http.StatusOK, ginx.Result{
 			Code: 5,
 			Msg:  "发送太频繁,请稍后再试",
 		})
 	default:
-		ctx.JSON(http.StatusOK, Result{
+		ctx.JSON(http.StatusOK, ginx.Result{
 			Code: 4,
 			Msg:  "发送失败",
 		})
 	}
 
-	ctx.JSON(http.StatusOK, Result{
+	ctx.JSON(http.StatusOK, ginx.Result{
 		Msg: "发送成功",
 	})
 }
@@ -118,7 +119,7 @@ func (u *UserHandler) RefreshToken(ctx *gin.Context) {
 		return
 	}
 
-	ctx.JSON(http.StatusOK, Result{
+	ctx.JSON(http.StatusOK, ginx.Result{
 		Msg: "OK",
 	})
 
@@ -137,7 +138,7 @@ func (u *UserHandler) LoginSms(ctx *gin.Context) {
 
 	ok, err := u.codeSvc.Verify(ctx, biz, req.Phone, req.Code)
 	if err != nil {
-		ctx.JSON(http.StatusOK, Result{
+		ctx.JSON(http.StatusOK, ginx.Result{
 			Code: 5,
 			Msg:  "系统错误",
 		})
@@ -146,7 +147,7 @@ func (u *UserHandler) LoginSms(ctx *gin.Context) {
 	}
 
 	if !ok {
-		ctx.JSON(http.StatusOK, Result{
+		ctx.JSON(http.StatusOK, ginx.Result{
 			Msg:  "验证码有误",
 			Code: 4,
 		})
@@ -155,7 +156,7 @@ func (u *UserHandler) LoginSms(ctx *gin.Context) {
 
 	user, err := u.svc.FindOrCreate(ctx, req.Phone)
 	if err != nil {
-		ctx.JSON(http.StatusOK, Result{
+		ctx.JSON(http.StatusOK, ginx.Result{
 			Code: 5,
 			Msg:  "系统错误",
 		})
@@ -163,14 +164,14 @@ func (u *UserHandler) LoginSms(ctx *gin.Context) {
 	}
 
 	if err = u.SetLoginToken(ctx, user.Id); err != nil {
-		ctx.JSON(http.StatusOK, Result{
+		ctx.JSON(http.StatusOK, ginx.Result{
 			Code: 5,
 			Msg:  "系统错误",
 		})
 		return
 	}
 
-	ctx.JSON(http.StatusOK, Result{
+	ctx.JSON(http.StatusOK, ginx.Result{
 		Msg:  "验证成功",
 		Code: 4,
 	})
@@ -260,11 +261,11 @@ func (u *UserHandler) LogoutJwt(ctx *gin.Context) {
 	err := u.ClearToken(ctx)
 
 	if err != nil {
-		ctx.JSON(http.StatusOK, Result{Msg: "退出登录失败", Code: 5})
+		ctx.JSON(http.StatusOK, ginx.Result{Msg: "退出登录失败", Code: 5})
 		return
 	}
 
-	ctx.JSON(http.StatusOK, Result{Msg: "退出登录成功", Code: 0})
+	ctx.JSON(http.StatusOK, ginx.Result{Msg: "退出登录成功", Code: 0})
 	return
 }
 

@@ -16,6 +16,7 @@ import (
 	"webbook/internal/service"
 	svcmocks "webbook/internal/service/mocks"
 	ijwt "webbook/internal/web/jwt"
+	"webbook/pkg/ginx"
 	"webbook/pkg/logger"
 )
 
@@ -25,7 +26,7 @@ func TestArticleHandler_Publish(t *testing.T) {
 		mock     func(ctrl *gomock.Controller) (service.ArticleService, logger.Logger)
 		reqBody  string
 		wantCode int
-		wantRes  Result
+		wantRes  ginx.Result
 	}{
 		{
 			name: "新建并发表",
@@ -49,7 +50,7 @@ func TestArticleHandler_Publish(t *testing.T) {
 }
 `,
 			wantCode: 200,
-			wantRes: Result{
+			wantRes: ginx.Result{
 				Data: float64(1),
 				Msg:  "OK",
 			},
@@ -76,7 +77,7 @@ func TestArticleHandler_Publish(t *testing.T) {
 }
 `,
 			wantCode: 200,
-			wantRes: Result{
+			wantRes: ginx.Result{
 				Data: float64(5),
 				Msg:  "系统错误",
 			},
@@ -112,7 +113,7 @@ func TestArticleHandler_Publish(t *testing.T) {
 
 			assert.Equal(t, tt.wantCode, resp.Code)
 
-			var webResult Result
+			var webResult ginx.Result
 			err = json.NewDecoder(resp.Body).Decode(&webResult)
 			require.NoError(t, err)
 

@@ -11,6 +11,7 @@ import (
 	"webbook/internal/service"
 	"webbook/internal/service/oauth2/wechat"
 	ijwt "webbook/internal/web/jwt"
+	"webbook/pkg/ginx"
 )
 
 type OAuth2WechatHandler struct {
@@ -46,7 +47,7 @@ func (h *OAuth2WechatHandler) AuthURL(ctx *gin.Context) {
 
 	url, err := h.svc.AuthURL(ctx, state)
 	if err != nil {
-		ctx.JSON(http.StatusOK, Result{
+		ctx.JSON(http.StatusOK, ginx.Result{
 			Code: 5,
 			Msg:  "构造登录URL失败",
 		})
@@ -54,14 +55,14 @@ func (h *OAuth2WechatHandler) AuthURL(ctx *gin.Context) {
 	}
 
 	if err = h.setStateCookie(ctx, state); err != nil {
-		ctx.JSON(http.StatusOK, Result{
+		ctx.JSON(http.StatusOK, ginx.Result{
 			Code: 5,
 			Msg:  "系统异常",
 		})
 		return
 	}
 
-	ctx.JSON(http.StatusOK, Result{
+	ctx.JSON(http.StatusOK, ginx.Result{
 		Data: url,
 	})
 }
@@ -87,7 +88,7 @@ func (h *OAuth2WechatHandler) Callback(ctx *gin.Context) {
 	code := ctx.Query("code")
 	err := h.verifyState(ctx)
 	if err != nil {
-		ctx.JSON(http.StatusOK, Result{
+		ctx.JSON(http.StatusOK, ginx.Result{
 			Code: 4,
 			Msg:  "登录失败",
 		})
@@ -96,7 +97,7 @@ func (h *OAuth2WechatHandler) Callback(ctx *gin.Context) {
 
 	info, err := h.svc.VerifyCode(ctx, code)
 	if err != nil {
-		ctx.JSON(http.StatusOK, Result{
+		ctx.JSON(http.StatusOK, ginx.Result{
 			Code: 5,
 			Msg:  "系统错误",
 		})
@@ -105,7 +106,7 @@ func (h *OAuth2WechatHandler) Callback(ctx *gin.Context) {
 
 	u, err := h.userSvc.FindOrCreateByWechat(ctx, info)
 	if err != nil {
-		ctx.JSON(http.StatusOK, Result{
+		ctx.JSON(http.StatusOK, ginx.Result{
 			Code: 5,
 			Msg:  "系统错误",
 		})
@@ -114,13 +115,13 @@ func (h *OAuth2WechatHandler) Callback(ctx *gin.Context) {
 	// 从userService 里面拿userId
 	err = h.SetLoginToken(ctx, u.Id)
 	if err != nil {
-		ctx.JSON(http.StatusOK, Result{
+		ctx.JSON(http.StatusOK, ginx.Result{
 			Code: 5,
 			Msg:  "系统错误",
 		})
 		return
 	}
-	ctx.JSON(http.StatusOK, Result{
+	ctx.JSON(http.StatusOK, ginx.Result{
 		Msg: "OK",
 	})
 }

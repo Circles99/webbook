@@ -10,6 +10,7 @@ type ArticleDAO interface {
 	Sync(ctx context.Context, art Article) (int64, error)
 	Upsert(ctx context.Context, art PublishArticle) error
 	SyncStatus(ctx context.Context, id int64, authorId int64, status uint8) error
+	GetByAuthor(ctx context.Context, userId int64, offset int, limit int) ([]Article, error)
 }
 
 // Article 制作库的

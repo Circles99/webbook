@@ -15,6 +15,7 @@ import (
 	"webbook/internal/service"
 	svcmocks "webbook/internal/service/mocks"
 	ijwt "webbook/internal/web/jwt"
+	"webbook/pkg/ginx"
 	"webbook/pkg/logger"
 )
 
@@ -105,7 +106,7 @@ func TestUserHandler_LogSms(t *testing.T) {
 			mock     func(ctrl *gomock.Controller) (service.UserService, service.CodeService, logger.Logger, ijwt.Handler)
 			reqBody  string
 			wantCode int
-			wantBody Result
+			wantBody ginx.Result
 		}{
 			{
 				name: "登录成功",
@@ -123,7 +124,7 @@ func TestUserHandler_LogSms(t *testing.T) {
 				},
 				reqBody:  `{"phone":"15211112222", "code":"123456"}`,
 				wantCode: http.StatusOK,
-				wantBody: Result{
+				wantBody: ginx.Result{
 					Code: 4,
 					Msg:  "验证成功",
 				},
@@ -139,7 +140,7 @@ func TestUserHandler_LogSms(t *testing.T) {
 				},
 				reqBody:  `{"phone":"15211112222", "code":"123456"}`,
 				wantCode: http.StatusOK,
-				wantBody: Result{
+				wantBody: ginx.Result{
 					Code: 4,
 					Msg:  "验证码有误",
 				},
@@ -157,7 +158,7 @@ func TestUserHandler_LogSms(t *testing.T) {
 				},
 				reqBody:  `{"phone":"15211112222", "code":"123456"}`,
 				wantCode: http.StatusOK,
-				wantBody: Result{
+				wantBody: ginx.Result{
 					Code: 5,
 					Msg:  "系统错误",
 				},
@@ -185,7 +186,7 @@ func TestUserHandler_LogSms(t *testing.T) {
 
 			assert.Equal(t, tt.wantCode, resp.Code)
 
-			var res Result
+			var res ginx.Result
 			err = json.NewDecoder(resp.Body).Decode(&res)
 
 			require.NoError(t, err)

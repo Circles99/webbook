@@ -53,6 +53,11 @@ func NewMongoDBDAO(db *mongo.Database, node *snowflake.Node) ArticleDAO {
 	}
 }
 
+func (m MongoDBDAO) GetByAuthor(ctx context.Context, userId int64, offset int, limit int) ([]Article, error) {
+	//TODO implement me
+	panic("implement me")
+}
+
 func (m MongoDBDAO) Insert(ctx context.Context, art Article) (int64, error) {
 	now := time.Now().UnixMilli()
 	art.Created = now
