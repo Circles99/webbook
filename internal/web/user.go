@@ -94,7 +94,6 @@ func (u *UserHandler) SendLoginSMSCode(ctx *gin.Context) {
 
 // RefreshToken  todo:可做成同时刷新refreshtoken,redis中记录是否有效
 func (u *UserHandler) RefreshToken(ctx *gin.Context) {
-
 	// 只有这个接口拿出来的才是refresh_token, ，其他都是access_token
 	refreshToken := u.ExtractToken(ctx)
 	var rc ijwt.RefreshClaims

@@ -101,8 +101,20 @@ func (h RedisJwt) CheckSession(ctx *gin.Context, ssid string) error {
 }
 
 func (h RedisJwt) SetRefreshToken(ctx *gin.Context, uid int64, ssid string) error {
-	//TODO implement me
-	panic("implement me")
+	rc := RefreshClaims{
+		UserId: uid,
+		RegisteredClaims: jwt.RegisteredClaims{
+			// 设置为七天过期
+			ExpiresAt: jwt.NewNumericDate(time.Now().Add(time.Hour * 24 * 7)),
+		},
+	}
+	refreshToken := jwt.NewWithClaims(jwt.SigningMethodHS256, rc)
+	refreshTokenStr, err := refreshToken.SignedString([]byte(RtKey))
+	if err != nil {
+		return err
+	}
+	ctx.Header("x-refresh-token", refreshTokenStr)
+	return nil
 }
 
 func (h RedisJwt) SetJwtToken(ctx *gin.Context, uid int64, ssid string) error {
