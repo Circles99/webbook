@@ -16,14 +16,17 @@ import (
 var _ Handler = (*ArticleHandler)(nil)
 
 type ArticleHandler struct {
-	svc service.ArticleService
-	l   logger.Logger
+	svc     service.ArticleService
+	l       logger.Logger
+	intrSvc service.InteractiveService
+	biz     string
 }
 
 func NewArticleHandler(svc service.ArticleService, l logger.Logger) *ArticleHandler {
 	return &ArticleHandler{
 		svc: svc,
 		l:   l,
+		biz: "article",
 	}
 }
 
@@ -47,6 +50,13 @@ func (a *ArticleHandler) PubDetail(ctx *gin.Context, uc ijwt.UserClaims) (ginx.R
 		return ginx.Result{Code: 5, Msg: "作者错误"}, nil
 	}
 
+	// 增加阅读计数
+	go func() {
+		er := a.intrSvc.IncrReadCnt(ctx, a.biz, res.Id)
+		if er != nil {
+			a.l.Error("增加阅读计数失败", logger.Int64("aid", res.Id), logger.Error(er))
+		}
+	}()
 	return ginx.Result{Data: ArticleVo{
 		Id:         res.Id,
 		Title:      res.Title,
