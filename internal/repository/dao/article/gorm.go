@@ -24,6 +24,14 @@ func (dao *GORMArticleDao) GetById(ctx context.Context, id int64) (Article, erro
 	return art, err
 }
 
+func (dao *GORMArticleDao) GetPubById(ctx context.Context, id int64) (PublishArticle, error) {
+	var res PublishArticle
+	err := dao.db.WithContext(ctx).
+		Where("id = ?", id).
+		First(&res).Error
+	return res, err
+}
+
 func (dao *GORMArticleDao) GetByAuthor(ctx context.Context, userId int64, offset int, limit int) ([]Article, error) {
 	var arts []Article
 	err := dao.db.WithContext(ctx).Model(&Article{}).

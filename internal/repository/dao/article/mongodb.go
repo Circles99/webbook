@@ -19,6 +19,16 @@ type MongoDBDAO struct {
 	node    *snowflake.Node
 }
 
+func (m MongoDBDAO) GetById(ctx context.Context, id int64) (Article, error) {
+	//TODO implement me
+	panic("implement me")
+}
+
+func (m MongoDBDAO) GetPubById(ctx context.Context, id int64) (PublishArticle, error) {
+	//TODO implement me
+	panic("implement me")
+}
+
 func InitCollections(db *mongo.Database) error {
 	ctx, cancel := context.WithTimeout(context.Background(), time.Second*3)
 	defer cancel()
