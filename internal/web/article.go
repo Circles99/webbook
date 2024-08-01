@@ -38,6 +38,23 @@ func (a *ArticleHandler) RegisterRoutes(server *gin.Engine) {
 	g.GET("/list", ginx.WrapBodyAndToken[ListReq, ijwt.UserClaims](a.List))
 	g.GET("/detail/:id", ginx.WrapToken[ijwt.UserClaims](a.Detail))
 	g.GET("/pubDetail/:id", ginx.WrapToken[ijwt.UserClaims](a.PubDetail))
+	g.POST("/like", ginx.WrapBodyAndToken[LikeReq, ijwt.UserClaims](a.Like)) // 点赞和取消点赞都是这个接口
+}
+
+func (a *ArticleHandler) Like(ctx *gin.Context, req LikeReq, uc ijwt.UserClaims) (ginx.Result, error) {
+	var err error
+	if req.Like {
+		err = a.intrSvc.IncrLike(ctx, a.biz, req.Id, uc.UserId)
+	} else {
+
+		err = a.intrSvc.CancelLike(ctx, a.biz, req.Id, uc.UserId)
+	}
+
+	if err != nil {
+		return ginx.Result{Code: 5, Msg: "系统错误"}, err
+	}
+
+	return ginx.Result{Msg: "ok"}, nil
 }
 
 func (a *ArticleHandler) PubDetail(ctx *gin.Context, uc ijwt.UserClaims) (ginx.Result, error) {

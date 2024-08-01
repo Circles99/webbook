@@ -40,8 +40,40 @@ func (g *GORMInteractiveDAO) IncrReadCnt(ctx context.Context, biz string, bizId 
 }
 
 func (g *GORMInteractiveDAO) InsertLikeInfo(ctx context.Context, biz string, bizId, uid int64) error {
-	//TODO implement me
-	panic("implement me")
+	now := time.Now().Unix()
+	return g.db.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
+		// 插入或者修改点赞记录
+		err := tx.Clauses(clause.OnConflict{
+			DoUpdates: clause.Assignments(map[string]any{
+				"status": 0,
+				"utime":  now,
+			}),
+		}).Create(&UserLikeBiz{
+			BizId:  bizId,
+			Biz:    biz,
+			Uid:    uid,
+			Status: 1,
+			Ctime:  now,
+			Utime:  now,
+		}).Error
+		if err != nil {
+			return err
+		}
+
+		// 点赞数加1
+		return tx.WithContext(ctx).Clauses(clause.OnConflict{
+			DoUpdates: clause.Assignments(map[string]interface{}{
+				"like_cnt": gorm.Expr("`like_cnt` + 1"),
+				"utime":    now,
+			}),
+		}).Create(&Interactive{
+			Biz:     biz,
+			BizId:   bizId,
+			LikeCnt: 1,
+			Ctime:   now,
+			Utime:   now,
+		}).Error
+	})
 }
 
 func (g *GORMInteractiveDAO) GetLikeInfo(ctx context.Context, biz string, bizId, uid int64) (UserLikeBiz, error) {
@@ -50,8 +82,25 @@ func (g *GORMInteractiveDAO) GetLikeInfo(ctx context.Context, biz string, bizId,
 }
 
 func (g *GORMInteractiveDAO) DeleteLikeInfo(ctx context.Context, biz string, bizId, uid int64) error {
-	//TODO implement me
-	panic("implement me")
+	now := time.Now().UnixMilli()
+	return g.db.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
+		err := tx.Model(&UserLikeBiz{}).
+			Where("uid=? AND biz_id = ? AND biz=?", uid, bizId, biz).
+			Updates(map[string]interface{}{
+				"utime":  now,
+				"status": 0,
+			}).Error
+		if err != nil {
+			return err
+		}
+		return tx.Model(&Interactive{}).
+			Where("biz =? AND biz_id=?", biz, bizId).
+			Updates(map[string]interface{}{
+				"like_cnt": gorm.Expr("`like_cnt` - 1"),
+				"utime":    now,
+			}).Error
+	})
+
 }
 
 func (g *GORMInteractiveDAO) Get(ctx context.Context, biz string, bizId int64) (Interactive, error) {

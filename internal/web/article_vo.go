@@ -1,5 +1,10 @@
 package web
 
+type LikeReq struct {
+	Like bool  `json:"like"`
+	Id   int64 `json:"id"`
+}
+
 type ArticleVo struct {
 	Id         int64  `json:"id"`
 	Title      string `json:"title"`
