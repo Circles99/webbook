@@ -13,7 +13,7 @@ type InteractiveService interface {
 	// CancelLike 取消点赞
 	CancelLike(ctx context.Context, biz string, bizId int64, uid int64) error
 	// Collect 收藏
-	Collect(ctx context.Context, biz string, bizId, cid, uid int64) error
+	AddCollectionItem(ctx context.Context, biz string, bizId, cid, uid int64) error
 	Get(ctx context.Context, biz string, bizId, uid int64) (domain.Interactive, error)
 }
 
@@ -33,9 +33,10 @@ func (i interactiveService) CancelLike(ctx context.Context, biz string, bizId in
 	return i.repo.CancelLike(ctx, biz, bizId, uid)
 }
 
-func (i interactiveService) Collect(ctx context.Context, biz string, bizId, cid, uid int64) error {
-	//TODO implement me
-	panic("implement me")
+func (i interactiveService) AddCollectionItem(ctx context.Context, biz string, bizId, cid, uid int64) error {
+	// service层面上还叫收藏
+	// repository 层面上就应该是增加一个项
+	return i.repo.AddCollectionItem(ctx, biz, bizId, cid, uid)
 }
 
 func (i interactiveService) Get(ctx context.Context, biz string, bizId, uid int64) (domain.Interactive, error) {

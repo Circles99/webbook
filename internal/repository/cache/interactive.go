@@ -14,6 +14,10 @@ var (
 	luaIncrCnt string
 )
 
+const fieldReadCnt = "read_cnt"
+const fieldLikeCnt = "like_cnt"
+const fieldCollectCnt = "collect_cnt"
+
 type InteractiveCache interface {
 
 	// IncrReadCntIfPresent 如果在缓存中有对应的数据，就 +1
@@ -35,20 +39,19 @@ type RedisInteractiveCache struct {
 }
 
 func (r *RedisInteractiveCache) IncrReadCntIfPresent(ctx context.Context, biz string, bizId int64) error {
-	return r.client.Eval(ctx, luaIncrCnt, []string{r.key(biz, bizId)}, "read_cnt", 1).Err()
+	return r.client.Eval(ctx, luaIncrCnt, []string{r.key(biz, bizId)}, fieldReadCnt, 1).Err()
 }
 
 func (r *RedisInteractiveCache) IncrLikeCntIfPresent(ctx context.Context, biz string, bizId int64) error {
-	return r.client.Eval(ctx, luaIncrCnt, []string{r.key(biz, bizId)}, "like_cnt", 1).Err()
+	return r.client.Eval(ctx, luaIncrCnt, []string{r.key(biz, bizId)}, fieldLikeCnt, 1).Err()
 }
 
 func (r *RedisInteractiveCache) DecrLikeCntIfPresent(ctx context.Context, biz string, bizId int64) error {
-	return r.client.Eval(ctx, luaIncrCnt, []string{r.key(biz, bizId)}, "like_cnt", -1).Err()
+	return r.client.Eval(ctx, luaIncrCnt, []string{r.key(biz, bizId)}, fieldLikeCnt, -1).Err()
 }
 
 func (r *RedisInteractiveCache) IncrCollectCntIfPresent(ctx context.Context, biz string, bizId int64) error {
-	//TODO implement me
-	panic("implement me")
+	return r.client.Eval(ctx, luaIncrCnt, []string{r.key(biz, bizId)}, fieldCollectCnt, 1).Err()
 }
 
 func (r *RedisInteractiveCache) Get(ctx context.Context, biz string, bizId int64) (domain.Interactive, error) {

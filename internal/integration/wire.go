@@ -9,7 +9,7 @@ import (
 	"webbook/internal/repository/article"
 	"webbook/internal/repository/cache"
 	"webbook/internal/repository/dao"
-	article2 "webbook/internal/repository/dao/article"
+	articleDao "webbook/internal/repository/dao/article"
 	"webbook/internal/service"
 	"webbook/internal/web"
 	"webbook/internal/web/jwt"
@@ -21,7 +21,7 @@ func InitWebServer() *gin.Engine {
 		// 最基础的第三方服务
 		ioc.InitDB, ioc.InitRedis, ioc.InitSms, ioc.InitLogger,
 		// dao, cache
-		dao.NewUserDao, cache.NewUserCache, cache.NewCodeCache, article2.NewArticleDao,
+		dao.NewUserDao, cache.NewUserCache, cache.NewCodeCache, articleDao.NewArticleDao,
 		// repository
 		repository.NewUserRepository, repository.NewCodeRepository, article.NewArticleRepository,
 		// service.go

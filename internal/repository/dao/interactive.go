@@ -109,8 +109,30 @@ func (g *GORMInteractiveDAO) Get(ctx context.Context, biz string, bizId int64) (
 }
 
 func (g *GORMInteractiveDAO) InsertCollectionBiz(ctx context.Context, cb UserCollectionBiz) error {
-	//TODO implement me
-	panic("implement me")
+	now := time.Now().Unix()
+	cb.Ctime = now
+	cb.Utime = now
+	return g.db.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
+		// 插入收藏项目
+		err := g.db.WithContext(ctx).Create(&cb).Error
+		if err != nil {
+			return err
+		}
+
+		//更新数量
+		return tx.Clauses(clause.OnConflict{
+			DoUpdates: clause.Assignments(map[string]any{
+				"collect_cnt": gorm.Expr("`collect_cnt` + 1"),
+				"utime":       now,
+			}),
+		}).Create(&Interactive{
+			BizId:      cb.BizId,
+			Biz:        cb.Biz,
+			CollectCnt: 1,
+			Ctime:      now,
+			Utime:      now,
+		}).Error
+	})
 }
 
 func (g *GORMInteractiveDAO) GetCollectionInfo(ctx context.Context, biz string, bizId, uid int64) (UserCollectionBiz, error) {
