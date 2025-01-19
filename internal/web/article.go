@@ -4,6 +4,7 @@ import (
 	"github.com/ecodeclub/ekit/slice"
 	"github.com/gin-gonic/gin"
 	"github.com/spf13/cast"
+	"golang.org/x/sync/errgroup"
 	"net/http"
 	"time"
 	"webbook/internal/domain"
@@ -59,14 +60,32 @@ func (a *ArticleHandler) Like(ctx *gin.Context, req LikeReq, uc ijwt.UserClaims)
 
 func (a *ArticleHandler) PubDetail(ctx *gin.Context, uc ijwt.UserClaims) (ginx.Result, error) {
 	id := cast.ToInt64(ctx.Param("id"))
-	res, err := a.svc.PubDetail(ctx, id)
-	if err != nil {
-		return ginx.Result{Code: 5, Msg: "数据错误"}, nil
-	}
-	if res.Author.Id != uc.UserId {
-		return ginx.Result{Code: 5, Msg: "作者错误"}, nil
-	}
 
+	var eg errgroup.Group
+	var res domain.Article
+	var err error
+	eg.Go(func() error {
+		// 获取文章本体
+		res, err = a.svc.PubDetail(ctx, id)
+		return err
+
+	})
+
+	var intr domain.Interactive
+	eg.Go(func() error {
+		//获取文章的全部计数
+		// 可容忍错误
+		intr, err = a.intrSvc.Get(ctx, a.biz, id, uc.UserId)
+		return err
+	})
+
+	// 在这等待，保证前两个G 走完
+	err = eg.Wait()
+	if err != nil {
+		// 查询出问题了
+
+		return ginx.Result{Code: 5, Msg: "系统错误"}, nil
+	}
 	// 增加阅读计数
 	go func() {
 		er := a.intrSvc.IncrReadCnt(ctx, a.biz, res.Id)
@@ -84,6 +103,11 @@ func (a *ArticleHandler) PubDetail(ctx *gin.Context, uc ijwt.UserClaims) (ginx.R
 		Status:     res.Status.ToUint8(),
 		Created:    res.Created.Format(time.DateTime),
 		Updated:    res.Updated.Format(time.DateTime),
+		ReadCnt:    intr.ReadCnt,
+		LikeCnt:    intr.LikeCnt,
+		CollectCnt: intr.CollectCnt,
+		Liked:      intr.Liked,
+		Collected:  intr.Collected,
 	}}, nil
 }
 

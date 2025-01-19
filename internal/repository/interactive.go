@@ -17,6 +17,8 @@ type InteractiveRepository interface {
 	// AddCollectionItem 收藏
 	AddCollectionItem(ctx context.Context, biz string, bizId, cid, uid int64) error
 	Get(ctx context.Context, biz string, bizId, uid int64) (domain.Interactive, error)
+	Liked(ctx context.Context, biz string, id int64, uid int64) (bool, error)
+	Collected(ctx context.Context, biz string, id int64, uid int64) (bool, error)
 }
 
 type CachedReadCntRepository struct {
@@ -67,11 +69,57 @@ func (c *CachedReadCntRepository) AddCollectionItem(ctx context.Context, biz str
 	}
 
 	// 收藏个数
-
 	return c.cache.IncrCollectCntIfPresent(ctx, biz, bizId)
 }
 
 func (c *CachedReadCntRepository) Get(ctx context.Context, biz string, bizId, uid int64) (domain.Interactive, error) {
-	//TODO implement me
-	panic("implement me")
+	// 从缓存中拿出来 阅读数，点赞数，收藏数
+	intr, err := c.cache.Get(ctx, biz, bizId)
+	if err == nil {
+		return intr, nil
+	}
+	// 查询数据库
+	daoIntr, err := c.dao.Get(ctx, biz, bizId)
+	if err != nil {
+		return domain.Interactive{}, err
+	}
+
+	intr = c.toDomain(daoIntr)
+	go func() {
+		er := c.cache.Set(ctx, biz, bizId, intr)
+		if er != nil {
+			c.l.Error("回写缓存失败", logger.Error(er))
+		}
+	}()
+	return intr, err
+}
+
+func (c *CachedReadCntRepository) Liked(ctx context.Context, biz string, id int64, uid int64) (bool, error) {
+	_, err := c.dao.GetLikeInfo(ctx, biz, id, uid)
+	switch err {
+	case nil:
+		return true, nil
+	case dao.ErrRecordNotFound:
+		return false, nil
+	}
+	return false, err
+}
+
+func (c *CachedReadCntRepository) Collected(ctx context.Context, biz string, id int64, uid int64) (bool, error) {
+	_, err := c.dao.GetCollectionInfo(ctx, biz, id, uid)
+	switch err {
+	case nil:
+		return true, nil
+	case dao.ErrRecordNotFound:
+		return false, nil
+	}
+	return false, err
+}
+
+func (c *CachedReadCntRepository) toDomain(ie dao.Interactive) domain.Interactive {
+	return domain.Interactive{
+		ReadCnt:    ie.ReadCnt,
+		LikeCnt:    ie.LikeCnt,
+		CollectCnt: ie.CollectCnt,
+	}
 }

@@ -7,6 +7,8 @@ import (
 	"time"
 )
 
+var ErrRecordNotFound = gorm.ErrRecordNotFound
+
 type InteractiveDao interface {
 	IncrReadCnt(ctx context.Context, biz string, bizId int64) error
 	InsertLikeInfo(ctx context.Context, biz string, bizId, uid int64) error
@@ -77,8 +79,9 @@ func (g *GORMInteractiveDAO) InsertLikeInfo(ctx context.Context, biz string, biz
 }
 
 func (g *GORMInteractiveDAO) GetLikeInfo(ctx context.Context, biz string, bizId, uid int64) (UserLikeBiz, error) {
-	//TODO implement me
-	panic("implement me")
+	var res UserLikeBiz
+	err := g.db.WithContext(ctx).Where("biz = ? AND biz_id = ? AND uid = ? AND status = ?", biz, bizId, uid, 1).First(&res).Error
+	return res, err
 }
 
 func (g *GORMInteractiveDAO) DeleteLikeInfo(ctx context.Context, biz string, bizId, uid int64) error {
@@ -104,8 +107,9 @@ func (g *GORMInteractiveDAO) DeleteLikeInfo(ctx context.Context, biz string, biz
 }
 
 func (g *GORMInteractiveDAO) Get(ctx context.Context, biz string, bizId int64) (Interactive, error) {
-	//TODO implement me
-	panic("implement me")
+	var res Interactive
+	err := g.db.WithContext(ctx).Where("biz = ? AND biz_id = ?", biz, bizId).First(&res).Error
+	return res, err
 }
 
 func (g *GORMInteractiveDAO) InsertCollectionBiz(ctx context.Context, cb UserCollectionBiz) error {
@@ -136,8 +140,9 @@ func (g *GORMInteractiveDAO) InsertCollectionBiz(ctx context.Context, cb UserCol
 }
 
 func (g *GORMInteractiveDAO) GetCollectionInfo(ctx context.Context, biz string, bizId, uid int64) (UserCollectionBiz, error) {
-	//TODO implement me
-	panic("implement me")
+	var res UserCollectionBiz
+	err := g.db.WithContext(ctx).Where("biz = ? AND biz_id = ? AND uid = ?", biz, bizId, uid).First(&res).Error
+	return res, err
 }
 
 // 正常来说，一张主表和与它有关联关系的表会共用一个DAO，

@@ -15,6 +15,11 @@ type ArticleVo struct {
 	Status     uint8  `json:"status"`
 	Created    string `json:"created"`
 	Updated    string `json:"updated"`
+	ReadCnt    int64  `json:"readCnt"`
+	LikeCnt    int64  `json:"likeCnt"`
+	CollectCnt int64  `json:"collectCnt"`
+	Liked      bool   `json:"liked"`
+	Collected  bool   `json:"collected"`
 }
 
 type ListReq struct {

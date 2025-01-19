@@ -5,6 +5,7 @@ import (
 	_ "embed"
 	"fmt"
 	"github.com/redis/go-redis/v9"
+	"github.com/spf13/cast"
 	"time"
 	"webbook/internal/domain"
 )
@@ -55,13 +56,35 @@ func (r *RedisInteractiveCache) IncrCollectCntIfPresent(ctx context.Context, biz
 }
 
 func (r *RedisInteractiveCache) Get(ctx context.Context, biz string, bizId int64) (domain.Interactive, error) {
-	//TODO implement me
-	panic("implement me")
+	data, err := r.client.HGetAll(ctx, r.key(biz, bizId)).Result()
+	if err != nil {
+		return domain.Interactive{}, err
+	}
+
+	if len(data) == 0 {
+		return domain.Interactive{}, err
+	}
+
+	collectCnt := cast.ToInt64(data[fieldCollectCnt])
+	likeCnt := cast.ToInt64(data[fieldLikeCnt])
+	readCnt := cast.ToInt64(data[fieldReadCnt])
+	return domain.Interactive{
+		ReadCnt:    readCnt,
+		LikeCnt:    likeCnt,
+		CollectCnt: collectCnt,
+	}, nil
 }
 
 func (r *RedisInteractiveCache) Set(ctx context.Context, biz string, bizId int64, intr domain.Interactive) error {
-	//TODO implement me
-	panic("implement me")
+	err := r.client.HMSet(ctx, r.key(biz, bizId),
+		fieldLikeCnt, intr.LikeCnt,
+		fieldReadCnt, intr.ReadCnt,
+		fieldCollectCnt, intr.CollectCnt,
+	).Err()
+	if err != nil {
+		return err
+	}
+	return r.client.Expire(ctx, r.key(biz, bizId), time.Minute*15).Err()
 }
 
 func (r *RedisInteractiveCache) key(biz string, bizId int64) string {
