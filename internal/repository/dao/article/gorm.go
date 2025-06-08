@@ -24,8 +24,8 @@ func (dao *GORMArticleDao) GetById(ctx context.Context, id int64) (Article, erro
 	return art, err
 }
 
-func (dao *GORMArticleDao) GetPubById(ctx context.Context, id int64) (PublishArticle, error) {
-	var res PublishArticle
+func (dao *GORMArticleDao) GetPubById(ctx context.Context, id int64) (PublishedArticle, error) {
+	var res PublishedArticle
 	err := dao.db.WithContext(ctx).
 		Where("id = ?", id).
 		First(&res).Error
@@ -59,7 +59,7 @@ func (dao *GORMArticleDao) SyncStatus(ctx context.Context, id int64, authorId in
 			return errors.New("更新失败")
 		}
 
-		res = tx.Model(&PublishArticle{}).Where("id = ? AND author_id = ?", id, authorId).Updates(map[string]any{
+		res = tx.Model(&PublishedArticle{}).Where("id = ? AND author_id = ?", id, authorId).Updates(map[string]any{
 			"status":  status,
 			"updated": now,
 		})
@@ -84,7 +84,7 @@ func (dao *GORMArticleDao) Transaction(ctx context.Context, bizFunc func(txDao A
 	})
 }
 
-func (dao *GORMArticleDao) Upsert(ctx context.Context, art PublishArticle) error {
+func (dao *GORMArticleDao) Upsert(ctx context.Context, art PublishedArticle) error {
 	now := time.Now().UnixMilli()
 	art.Created = now
 	art.Updated = now
@@ -122,7 +122,7 @@ func (dao *GORMArticleDao) Sync(ctx context.Context, art Article) (int64, error)
 		// 操作线上库，保存数据
 
 		art.Id = id
-		return txDao.Upsert(ctx, PublishArticle{Article: art})
+		return txDao.Upsert(ctx, PublishedArticle(art))
 	})
 	return id, err
 }

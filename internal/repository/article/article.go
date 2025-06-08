@@ -50,7 +50,7 @@ func (a *ArticleRepositoryImpl) PubDetail(ctx context.Context, id int64) (domain
 
 	// 组装user
 	user, err := a.userRepo.FindById(ctx, art.AuthorId)
-	res := a.toDomain(art)
+	res := a.toDomain(article.Article(art))
 	res.Author.Name = user.NickName
 	return res, nil
 

@@ -3,11 +3,10 @@ package main
 import (
 	"fmt"
 	"github.com/fsnotify/fsnotify"
-	_ "github.com/spf13/viper/remote"
-	"go.uber.org/zap"
-
 	"github.com/spf13/pflag"
 	"github.com/spf13/viper"
+	_ "github.com/spf13/viper/remote"
+	"go.uber.org/zap"
 )
 
 func main() {

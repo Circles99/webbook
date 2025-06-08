@@ -47,11 +47,11 @@ func (d *S3DAO) Sync(ctx context.Context, art Article) (int64, error) {
 
 		art.Id = id
 		now := time.Now().UnixMilli()
-		publishArt := PublishArticle{art}
+		publishArt := PublishedArticle(art)
 		publishArt.Created = now
 		publishArt.Updated = now
 		publishArt.Content = ""
-		return txDao.Upsert(ctx, PublishArticle{Article: art})
+		return txDao.Upsert(ctx, publishArt)
 	})
 
 	if err != nil {
@@ -88,7 +88,7 @@ func (d *S3DAO) SyncStatus(ctx context.Context, id int64, authorId int64, status
 			return errors.New("更新失败")
 		}
 
-		res = tx.Model(&PublishArticle{}).Where("id = ? AND author_id = ?", id, authorId).Updates(map[string]any{
+		res = tx.Model(&PublishedArticle{}).Where("id = ? AND author_id = ?", id, authorId).Updates(map[string]any{
 			"status":  status,
 			"updated": now,
 		})

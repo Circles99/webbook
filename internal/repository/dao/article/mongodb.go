@@ -24,7 +24,7 @@ func (m MongoDBDAO) GetById(ctx context.Context, id int64) (Article, error) {
 	panic("implement me")
 }
 
-func (m MongoDBDAO) GetPubById(ctx context.Context, id int64) (PublishArticle, error) {
+func (m MongoDBDAO) GetPubById(ctx context.Context, id int64) (PublishedArticle, error) {
 	//TODO implement me
 	panic("implement me")
 }
@@ -120,7 +120,7 @@ func (m MongoDBDAO) Sync(ctx context.Context, art Article) (int64, error) {
 
 	art.Id = id
 
-	err = m.Upsert(ctx, PublishArticle{art})
+	err = m.Upsert(ctx, PublishedArticle(art))
 	if err != nil {
 		return 0, err
 	}
@@ -128,7 +128,7 @@ func (m MongoDBDAO) Sync(ctx context.Context, art Article) (int64, error) {
 	return id, nil
 }
 
-func (m MongoDBDAO) Upsert(ctx context.Context, art PublishArticle) error {
+func (m MongoDBDAO) Upsert(ctx context.Context, art PublishedArticle) error {
 
 	now := time.Now().UnixMilli()
 	art.Updated = now

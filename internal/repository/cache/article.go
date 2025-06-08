@@ -23,6 +23,12 @@ type RedisArticleCache struct {
 	client redis.Cmdable
 }
 
+func NewArticleRedisCache(client redis.Cmdable) ArticleCache {
+	return &RedisArticleCache{
+		client: client,
+	}
+}
+
 func (r *RedisArticleCache) SetPub(ctx context.Context, art domain.Article) error {
 	return nil
 }

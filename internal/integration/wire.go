@@ -21,7 +21,7 @@ func InitWebServer() *gin.Engine {
 		// 最基础的第三方服务
 		ioc.InitDB, ioc.InitRedis, ioc.InitSms, ioc.InitLogger,
 		// dao, cache
-		dao.NewUserDao, cache.NewUserCache, cache.NewCodeCache, articleDao.NewArticleDao,
+		dao.NewUserDao, cache.NewUserCache, cache.NewCodeCache, articleDao.NewArticleDao, cache.NewArticleRedisCache,
 		// repository
 		repository.NewUserRepository, repository.NewCodeRepository, article.NewArticleRepository,
 		// service.go
@@ -54,7 +54,7 @@ func InitArticleHandler(dao article2.ArticleDAO) *web.ArticleHandler {
 //	wire.Build(thirdProvider,
 //		userSvcProvider,
 //		interactiveSvcProvider,
-//		cache.NewRedisArticleCache,
+//		cache.NewRedis,
 //		//wire.InterfaceValue(new(article.ArticleDAO), dao),
 //		repository.NewArticleRepository,
 //		service.NewArticleService,

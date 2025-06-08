@@ -8,11 +8,11 @@ type ArticleDAO interface {
 	Insert(ctx context.Context, art Article) (int64, error)
 	Update(ctx context.Context, art Article) error
 	Sync(ctx context.Context, art Article) (int64, error)
-	Upsert(ctx context.Context, art PublishArticle) error
+	Upsert(ctx context.Context, art PublishedArticle) error
 	SyncStatus(ctx context.Context, id int64, authorId int64, status uint8) error
 	GetByAuthor(ctx context.Context, userId int64, offset int, limit int) ([]Article, error)
 	GetById(ctx context.Context, id int64) (Article, error)
-	GetPubById(ctx context.Context, id int64) (PublishArticle, error)
+	GetPubById(ctx context.Context, id int64) (PublishedArticle, error)
 }
 
 // Article 制作库的
@@ -29,3 +29,5 @@ type Article struct {
 	Created int64
 	Updated int64
 }
+
+type PublishedArticle Article
